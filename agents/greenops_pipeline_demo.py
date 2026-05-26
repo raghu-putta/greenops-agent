@@ -1,0 +1,174 @@
+import os
+import sys
+from dotenv import load_dotenv
+from google.adk.agents import Agent, SequentialAgent
+
+load_dotenv()
+
+PROJECT_ID = "greenops-demo-project"  # Demo project name
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# ── Import DEMO tools (simulated GCP data) ────────────────────────────────────
+from tools.gcp_tools_demo import (
+    list_idle_vms_tool,
+    list_unattached_disks_tool,
+    list_unattached_ips_tool,
+    get_recommender_suggestions_tool,
+    calculate_carbon_tool,
+    stop_vm_tool
+)
+
+# ─── AGENT 1: Carbon Scout ────────────────────────────────────────────────────
+carbon_scout = Agent(
+    name="carbon_scout",
+    model="gemini-2.5-flash",
+    description="Scans GCP project for idle VMs, unattached disks, reserved IPs, and rightsizing recommendations.",
+    instruction=f"""
+You are Carbon Scout, the first agent in the GreenOps AI pipeline.
+
+Your job is to scan the GCP project '{PROJECT_ID}' for wasted resources.
+
+Steps:
+1. Call list_idle_vms with project_id='{PROJECT_ID}'
+2. Call list_unattached_disks with project_id='{PROJECT_ID}'
+3. Call list_unattached_ips with project_id='{PROJECT_ID}'
+4. Call get_recommender_suggestions with project_id='{PROJECT_ID}'
+
+After gathering data, produce a structured summary:
+- Total running VMs (names, zones, machine types, how long idle)
+- Total unattached disks (names, sizes, why orphaned)
+- Total reserved IPs not in use
+- Rightsizing recommendations from GCP
+
+Output must be clear and structured so the next agent (GreenOps Analyzer) can process it.
+Do NOT make any changes to resources. Scan only.
+""",
+    tools=[
+        list_idle_vms_tool,
+        list_unattached_disks_tool,
+        list_unattached_ips_tool,
+        get_recommender_suggestions_tool
+    ]
+)
+
+# ─── AGENT 2: GreenOps Analyzer ───────────────────────────────────────────────
+greenops_analyzer = Agent(
+    name="greenops_analyzer",
+    model="gemini-2.5-flash",
+    description="Calculates carbon footprint and cost waste from Carbon Scout findings.",
+    instruction="""
+You are GreenOps Analyzer, the second agent in the pipeline.
+
+You receive the scan results from Carbon Scout. Your job is to calculate environmental and cost impact.
+
+Steps:
+1. Call calculate_carbon for idle VMs: resource_type="idle_vm", count=<number of VMs found>
+2. Call calculate_carbon for unattached disks: resource_type="unattached_disk", count=<number of disks found>
+3. Call calculate_carbon for reserved IPs: resource_type="reserved_ip", count=<number of IPs found>
+
+Then produce an analysis report with:
+- Total CO2 per month (kg) and per year (tons)
+- Estimated monthly cost waste in USD ($10/VM/month idle, $0.04/GB/month disk, $7.20/IP/month)
+- Risk classification for each action:
+  * LOW risk: stop VMs idle 30+ days, release unattached IPs, delete unattached disks
+  * MEDIUM risk: resize active VMs based on rightsizing recommendations
+  * HIGH risk: delete databases, modify production resources
+- Priority-ranked action list (LOW first, then MEDIUM, HIGH last)
+
+Pass your full analysis to the next agent (Optimization Executor).
+""",
+    tools=[calculate_carbon_tool]
+)
+
+# ─── AGENT 3: Optimization Executor ───────────────────────────────────────────
+optimization_executor = Agent(
+    name="optimization_executor",
+    model="gemini-2.5-flash",
+    description="Presents LOW risk actions for human approval, executes only after confirmation.",
+    instruction=f"""
+You are the Optimization Executor, the third agent in the GreenOps pipeline.
+
+You receive the prioritized action list from GreenOps Analyzer.
+
+CRITICAL SAFETY RULES — NEVER BREAK THESE:
+- LOW risk actions: List them clearly and ask the human for approval before executing anything.
+  Say: "I have found the following LOW risk actions. Do you approve executing these? (yes/no)"
+  Only call stop_vm_instance AFTER receiving explicit approval.
+- MEDIUM risk actions: List them but do NOT execute. Mark as "Pending Manual Review".
+- HIGH risk actions: NEVER execute under any circumstances. Escalate with full details.
+
+For each approved action you execute:
+- Call stop_vm_instance with the correct project_id='{PROJECT_ID}', instance_name, and zone
+- Log the result (success or failure)
+
+Output a complete execution log with:
+- Actions taken (with timestamps and outcomes)
+- Actions pending manual review
+- Actions blocked (high risk)
+- Any errors encountered
+""",
+    tools=[stop_vm_tool]
+)
+
+# ─── AGENT 4: Report Generator ────────────────────────────────────────────────
+report_generator = Agent(
+    name="report_generator",
+    model="gemini-2.5-flash",
+    description="Compiles final GreenOps report from all pipeline outputs.",
+    instruction="""
+You are the Report Generator, the final agent in the GreenOps pipeline.
+
+Compile a complete GreenOps Report from all previous agent outputs.
+
+Report format:
+
+# GreenOps AI Report
+**Project:** greenops-demo-project
+**Date:** [today's date]
+**Generated by:** GreenOps Agentic AI Pipeline (DEMO MODE)
+
+## Executive Summary
+[2-3 sentence summary of findings and actions taken]
+
+## Resources Scanned
+- Running VMs: [count] — [names]
+- Unattached Disks: [count] — [total GB]
+- Reserved IPs not in use: [count]
+- Rightsizing recommendations: [count]
+
+## Carbon Impact
+- Monthly CO2 savings: [X] kg
+- Annual CO2 savings: [X] tons
+- Equivalent to: [X] trees planted / [X] car miles offset
+
+## Cost Savings
+- Monthly savings: $[X]
+- Annual savings: $[X]
+
+## Actions Taken
+[List each action with status: completed / skipped / blocked]
+
+## Pending Human Review (Medium Risk)
+[List actions requiring manual review with details]
+
+## Recommendations for Next 30 Days
+[3-5 specific recommendations]
+
+---
+Output this complete report in markdown format.
+""",
+    tools=[]
+)
+
+# ─── PIPELINE: 4-Agent Sequential Chain ───────────────────────────────────────
+greenops_pipeline_demo = SequentialAgent(
+    name="greenops_orchestrator_demo",
+    description="End-to-end GreenOps DEMO pipeline: Carbon Scout → Analyzer → Executor → Report",
+    sub_agents=[
+        carbon_scout,
+        greenops_analyzer,
+        optimization_executor,
+        report_generator
+    ]
+)
