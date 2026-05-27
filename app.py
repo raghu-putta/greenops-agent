@@ -7,11 +7,14 @@ Open: http://localhost:8000
 """
 import asyncio
 import json
+import logging
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 api_key = os.getenv("GOOGLE_API_KEY")
@@ -135,6 +138,30 @@ async def run(mode: str):
 @app.get("/status")
 async def status():
     return pipeline_status
+
+
+@app.post("/scheduled-scan")
+async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
+    """
+    Cloud Scheduler calls this endpoint every hour.
+    Protected by X-Scheduler-Secret header — set SCHEDULER_SECRET env var.
+    Runs a full GCP resource scan and sends results to Gmail + Slack.
+    """
+    expected = os.getenv("SCHEDULER_SECRET", "")
+    if not expected:
+        raise HTTPException(status_code=500, detail="SCHEDULER_SECRET env var not set")
+    if x_scheduler_secret != expected:
+        raise HTTPException(status_code=401, detail="Invalid scheduler secret")
+
+    try:
+        from scheduler import run_scheduled_scan
+        # Run in a thread so it doesn't block the event loop
+        import asyncio
+        result = await asyncio.get_event_loop().run_in_executor(None, run_scheduled_scan)
+        return JSONResponse(result)
+    except Exception as e:
+        logger.error(f"/scheduled-scan failed: {e}")
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
 # ── Dashboard HTML ────────────────────────────────────────────────────────────
