@@ -42,18 +42,34 @@ async def _broadcast(data: dict):
 # ── Rate-limit helpers ────────────────────────────────────────────────────────
 MAX_RETRIES = 3
 
-def _is_rate_limit_error(e: Exception) -> bool:
-    """Return True if the exception is a Gemini 429 / RESOURCE_EXHAUSTED error."""
+def _is_retryable_error(e: Exception) -> bool:
+    """Return True for transient Gemini/Vertex AI errors worth retrying:
+    - 429 RESOURCE_EXHAUSTED  (free-tier quota)
+    - 503 UNAVAILABLE         (model overloaded / high demand)
+    """
     msg = str(e)
-    return "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower()
+    return (
+        "429" in msg
+        or "RESOURCE_EXHAUSTED" in msg
+        or "quota" in msg.lower()
+        or "503" in msg
+        or "UNAVAILABLE" in msg
+        or "high demand" in msg.lower()
+    )
 
 def _retry_delay_seconds(e: Exception) -> int:
     """
     Extract the retryDelay from the error payload, e.g. 'retryDelay': '44s'.
-    Falls back to 65 seconds (safe default for 1-min rolling window).
+    503 UNAVAILABLE → short 15s retry (transient overload, usually clears fast).
+    429 RESOURCE_EXHAUSTED → falls back to 65s (1-min rolling window).
     """
-    match = re.search(r"retryDelay['\"]?\s*:\s*['\"](\d+)s", str(e))
-    return int(match.group(1)) + 5 if match else 65
+    msg = str(e)
+    match = re.search(r"retryDelay['\"]?\s*:\s*['\"](\d+)s", msg)
+    if match:
+        return int(match.group(1)) + 5
+    if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
+        return 15  # 503s usually clear within seconds
+    return 65  # safe default for 429 quota window
 
 
 # ── Pipeline runner (with auto-retry on 429) ──────────────────────────────────
@@ -116,32 +132,34 @@ async def run_pipeline(mode: str):
             break  # exit retry loop on success
 
         except Exception as e:
-            if _is_rate_limit_error(e) and attempt < MAX_RETRIES:
+            if _is_retryable_error(e) and attempt < MAX_RETRIES:
                 wait = _retry_delay_seconds(e)
+                msg = str(e)
+                if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
+                    label = f"⏳ Vertex AI model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}s…"
+                else:
+                    label = (
+                        f"⏳ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
+                        f"Auto-retrying in {wait}s — this is normal on the free plan."
+                    )
                 await _broadcast({
                     "type": "retry",
                     "attempt": attempt,
                     "max": MAX_RETRIES,
                     "wait": wait,
                     "time": datetime.now().strftime("%H:%M:%S"),
-                    "message": (
-                        f"⏳ Gemini free-tier rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
-                        f"Auto-retrying in {wait}s — this is normal on the free plan."
-                    )
+                    "message": label
                 })
-                logger.warning("Rate limit on attempt %d/%d — waiting %ds", attempt, MAX_RETRIES, wait)
+                logger.warning("Retryable error on attempt %d/%d — waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
                 await asyncio.sleep(wait)
                 # continue → next attempt
             else:
-                # Non-rate-limit error, or exhausted all retries
-                if _is_rate_limit_error(e):
+                # Non-retryable error, or exhausted all retries
+                if _is_retryable_error(e):
                     friendly = (
-                        "🚫 Gemini free-tier quota exhausted after 3 retries.\n\n"
-                        "Fix options:\n"
-                        "  1️⃣  Wait ~1 minute and try again (free tier: 5 req/min).\n"
-                        "  2️⃣  Enable billing on your Google AI project for 1000 req/min.\n"
-                        "  3️⃣  Set GOOGLE_GENAI_USE_VERTEXAI=1 in Cloud Run env vars to use\n"
-                        "      Vertex AI instead (higher quota, no separate API key needed)."
+                        "🚫 Pipeline failed after 3 retries.\n\n"
+                        "If you saw '503 UNAVAILABLE': Vertex AI was overloaded — try again in 30s.\n"
+                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit — wait ~1 min or enable billing."
                     )
                     await _broadcast({"type": "error", "message": friendly})
                 else:
