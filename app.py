@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
@@ -38,66 +39,116 @@ async def _broadcast(data: dict):
             pass
 
 
-# ── Pipeline runner ───────────────────────────────────────────────────────────
+# ── Rate-limit helpers ────────────────────────────────────────────────────────
+MAX_RETRIES = 3
+
+def _is_rate_limit_error(e: Exception) -> bool:
+    """Return True if the exception is a Gemini 429 / RESOURCE_EXHAUSTED error."""
+    msg = str(e)
+    return "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower()
+
+def _retry_delay_seconds(e: Exception) -> int:
+    """
+    Extract the retryDelay from the error payload, e.g. 'retryDelay': '44s'.
+    Falls back to 65 seconds (safe default for 1-min rolling window).
+    """
+    match = re.search(r"retryDelay['\"]?\s*:\s*['\"](\d+)s", str(e))
+    return int(match.group(1)) + 5 if match else 65
+
+
+# ── Pipeline runner (with auto-retry on 429) ──────────────────────────────────
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
 
-    try:
-        if mode == "demo":
-            from agents.greenops_pipeline_demo import greenops_pipeline_demo as pipeline
-            project = "greenops-demo-project"
-        else:
-            from agents.greenops_pipeline import greenops_pipeline as pipeline
-            project = os.getenv("GCP_PROJECT_ID", "your-gcp-project")
+    if mode == "demo":
+        from agents.greenops_pipeline_demo import greenops_pipeline_demo as pipeline
+        project = "greenops-demo-project"
+    else:
+        from agents.greenops_pipeline import greenops_pipeline as pipeline
+        project = os.getenv("GCP_PROJECT_ID", "your-gcp-project")
 
-        from google.adk.runners import Runner
-        from google.adk.sessions import InMemorySessionService
-        from google.genai.types import Content, Part
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai.types import Content, Part
 
-        await _broadcast({
-            "type": "start",
-            "mode": mode,
-            "time": datetime.now().strftime("%H:%M:%S")
-        })
+    await _broadcast({
+        "type": "start",
+        "mode": mode,
+        "time": datetime.now().strftime("%H:%M:%S")
+    })
 
-        session_service = InMemorySessionService()
-        runner = Runner(
-            agent=pipeline,
-            app_name="greenops_web",
-            session_service=session_service
-        )
-        session = await session_service.create_session(
-            app_name="greenops_web",
-            user_id="web_user"
-        )
-        user_msg = Content(
-            role="user",
-            parts=[Part(text=f"Run full GreenOps analysis for GCP project {project}")]
-        )
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            session_service = InMemorySessionService()
+            runner = Runner(
+                agent=pipeline,
+                app_name="greenops_web",
+                session_service=session_service
+            )
+            session = await session_service.create_session(
+                app_name="greenops_web",
+                user_id="web_user"
+            )
+            user_msg = Content(
+                role="user",
+                parts=[Part(text=f"Run full GreenOps analysis for GCP project {project}")]
+            )
 
-        async for event in runner.run_async(
-            user_id="web_user",
-            session_id=session.id,
-            new_message=user_msg
-        ):
-            if hasattr(event, "author") and hasattr(event, "content") and event.content:
-                if event.content.parts:
-                    text = event.content.parts[0].text
-                    if text and text.strip():
-                        await _broadcast({
-                            "type": "agent",
-                            "agent": event.author.upper(),
-                            "text": text,
-                            "time": datetime.now().strftime("%H:%M:%S")
-                        })
+            async for event in runner.run_async(
+                user_id="web_user",
+                session_id=session.id,
+                new_message=user_msg
+            ):
+                if hasattr(event, "author") and hasattr(event, "content") and event.content:
+                    if event.content.parts:
+                        text = event.content.parts[0].text
+                        if text and text.strip():
+                            await _broadcast({
+                                "type": "agent",
+                                "agent": event.author.upper(),
+                                "text": text,
+                                "time": datetime.now().strftime("%H:%M:%S")
+                            })
 
-        await _broadcast({"type": "done", "time": datetime.now().strftime("%H:%M:%S")})
+            # ── Success ──────────────────────────────────────────────────────
+            await _broadcast({"type": "done", "time": datetime.now().strftime("%H:%M:%S")})
+            break  # exit retry loop on success
 
-    except Exception as e:
-        await _broadcast({"type": "error", "message": str(e)})
-    finally:
-        pipeline_status = {"running": False, "complete": True}
+        except Exception as e:
+            if _is_rate_limit_error(e) and attempt < MAX_RETRIES:
+                wait = _retry_delay_seconds(e)
+                await _broadcast({
+                    "type": "retry",
+                    "attempt": attempt,
+                    "max": MAX_RETRIES,
+                    "wait": wait,
+                    "time": datetime.now().strftime("%H:%M:%S"),
+                    "message": (
+                        f"⏳ Gemini free-tier rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
+                        f"Auto-retrying in {wait}s — this is normal on the free plan."
+                    )
+                })
+                logger.warning("Rate limit on attempt %d/%d — waiting %ds", attempt, MAX_RETRIES, wait)
+                await asyncio.sleep(wait)
+                # continue → next attempt
+            else:
+                # Non-rate-limit error, or exhausted all retries
+                if _is_rate_limit_error(e):
+                    friendly = (
+                        "🚫 Gemini free-tier quota exhausted after 3 retries.\n\n"
+                        "Fix options:\n"
+                        "  1️⃣  Wait ~1 minute and try again (free tier: 5 req/min).\n"
+                        "  2️⃣  Enable billing on your Google AI project for 1000 req/min.\n"
+                        "  3️⃣  Set GOOGLE_GENAI_USE_VERTEXAI=1 in Cloud Run env vars to use\n"
+                        "      Vertex AI instead (higher quota, no separate API key needed)."
+                    )
+                    await _broadcast({"type": "error", "message": friendly})
+                else:
+                    await _broadcast({"type": "error", "message": str(e)})
+                break
+
+    pipeline_status = {"running": False, "complete": True}
 
 
 # ── API endpoints ─────────────────────────────────────────────────────────────
@@ -415,10 +466,28 @@ DASHBOARD = """<!DOCTYPE html>
       print(`<div class="t-timestamp">[${d.time}]  ✅ Done — full report saved to output/</div>`);
     }
 
+    else if (d.type === 'retry') {
+      setStatus('running', `⏳ Rate limit — retrying in ${d.wait}s (${d.attempt}/${d.max})…`);
+      print(`<div class="t-separator">─────────────────────────────────────────────────</div>`);
+      print(`<div class="t-error" style="color:#f0883e">${esc(d.message)}</div>`);
+      // Live countdown
+      let remaining = d.wait;
+      const counterId = 'retry-counter-' + Date.now();
+      print(`<div id="${counterId}" class="t-timestamp">  ↻ Retrying in <b>${remaining}s</b>…</div>`);
+      const tick = setInterval(() => {
+        remaining--;
+        const el = document.getElementById(counterId);
+        if (el) el.innerHTML = remaining > 0
+          ? `  ↻ Retrying in <b>${remaining}s</b>…`
+          : `  ↻ Retrying now…`;
+        if (remaining <= 0) clearInterval(tick);
+      }, 1000);
+    }
+
     else if (d.type === 'error') {
-      setStatus('', 'Error');
+      setStatus('', '❌ Error');
       setBtns(false);
-      print(`<div class="t-error">❌ Error: ${esc(d.message)}</div>`);
+      print(`<div class="t-error" style="white-space:pre-wrap">❌ ${esc(d.message)}</div>`);
     }
   }
 
