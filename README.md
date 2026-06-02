@@ -2,6 +2,8 @@
 
 **A 4-agent AI pipeline that scans Google Cloud projects for wasted resources, calculates carbon footprint, and executes safe optimizations — built with Google ADK and Gemini.**
 
+🔗 **Live Demo:** https://greenops-agent-845589445410.us-central1.run.app
+
 ---
 
 ## What It Does
@@ -38,10 +40,34 @@ Carbon Scout → GreenOps Analyzer → Optimization Executor → Report Generato
 ## Tech Stack
 
 - **[Google ADK](https://google.github.io/adk-docs/)** — Agent Development Kit for multi-agent orchestration
-- **[Gemini 2.5 Flash](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents
+- **[Gemini 2.0 Flash (gemini-2.0-flash-001)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents (stable pinned version)
+- **[Vertex AI](https://cloud.google.com/vertex-ai)** — Production-grade AI API (1000+ RPM, no quota limits)
+- **[Google Cloud Run](https://cloud.google.com/run)** — Serverless deployment
+- **[FastAPI](https://fastapi.tiangolo.com/)** — Web dashboard with SSE streaming
 - **Google Cloud SDK** — gcloud CLI for GCP resource scanning
 - **Python 3.12+** — core runtime
 - **SequentialAgent** — ADK pipeline: each agent passes context to the next
+
+---
+
+## Architecture
+
+```
+Browser (SSE) ←── FastAPI Dashboard ←── SequentialAgent Pipeline
+                        │
+                   Cloud Run (GCP)
+                        │
+              ┌─────────┴──────────┐
+              │   Vertex AI API    │
+              │  gemini-2.0-flash  │
+              └────────────────────┘
+```
+
+### Reliability Features
+- **Exponential backoff retry** — 5 retries with 20s → 40s → 80s → 120s → 180s delays
+- **503 UNAVAILABLE handling** — auto-retries when Vertex AI is under high demand
+- **429 RESOURCE_EXHAUSTED handling** — extracts retryDelay from API response and waits exact amount
+- **Vertex AI** — eliminates free-tier quota limits entirely
 
 ---
 
@@ -56,8 +82,10 @@ greenops-agent/
 │   ├── gcp_tools.py               # Real GCP tools via gcloud CLI
 │   └── gcp_tools_demo.py          # Demo tools with realistic mock data
 ├── output/                        # Generated GreenOps reports (auto-created, not committed)
-├── main.py                        # Run real pipeline
-├── main_demo.py                   # Run demo pipeline
+├── app.py                         # FastAPI web dashboard with SSE streaming
+├── scheduler.py                   # Cloud Scheduler integration (Gmail + Slack alerts)
+├── main.py                        # Run real pipeline (CLI)
+├── main_demo.py                   # Run demo pipeline (CLI)
 ├── test_api.py                    # Test Gemini API connectivity
 └── .env                           # ⚠️ NOT committed — secrets stay local
 ```
@@ -76,8 +104,6 @@ __pycache__/          ← Python cache
 .venv/                ← virtual environment
 ```
 
-Your `.env` file stays **only on your machine** — never exposed online.
-
 ---
 
 ## Quick Start
@@ -90,7 +116,7 @@ cd greenops-agent
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 # source .venv/bin/activate   # Mac/Linux
-pip install google-adk python-dotenv
+pip install -r requirements.txt
 ```
 
 ### 2. Configure `.env`
@@ -101,9 +127,13 @@ GCP_REGION=us-central1
 GCP_ZONE=us-central1-a
 CARBON_FACTOR_KWH=0.000233
 
-# Get free API key from https://aistudio.google.com/apikey
-GOOGLE_API_KEY=your-gemini-api-key
-GOOGLE_GENAI_USE_VERTEXAI=0
+# Option A: Vertex AI (recommended for production — no quota limits)
+GOOGLE_GENAI_USE_VERTEXAI=1
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+
+# Option B: Free Gemini API (dev only — 5 RPM limit)
+# GOOGLE_API_KEY=your-gemini-api-key
+# GOOGLE_GENAI_USE_VERTEXAI=0
 ```
 
 ### 3. Authenticate with GCP
@@ -123,6 +153,25 @@ python main_demo.py
 
 ```bash
 python main.py
+```
+
+### 6. Run the web dashboard locally
+
+```bash
+uvicorn app:app --reload --port 8000
+```
+Open: http://localhost:8000
+
+---
+
+## Deploy to Cloud Run
+
+```bash
+gcloud run deploy greenops-agent \
+  --source . \
+  --region us-central1 \
+  --project YOUR_PROJECT_ID \
+  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=1,GCP_PROJECT_ID=YOUR_PROJECT_ID
 ```
 
 ---
@@ -316,7 +365,7 @@ and 8.35 kg CO₂/month.
 
 ## Built With
 
-Built by **Raghu** using Google ADK + Gemini 2.5 Flash.
+Built by **Raghu Putta** using Google ADK + Gemini 2.0 Flash on Vertex AI.
 
 ---
 
