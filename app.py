@@ -40,7 +40,10 @@ async def _broadcast(data: dict):
 
 
 # ── Rate-limit helpers ────────────────────────────────────────────────────────
-MAX_RETRIES = 3
+MAX_RETRIES = 5
+
+# Exponential backoff delays for 503 errors (seconds): 20, 40, 80, 120, 180
+_503_BACKOFF = [20, 40, 80, 120, 180]
 
 def _is_retryable_error(e: Exception) -> bool:
     """Return True for transient Gemini/Vertex AI errors worth retrying:
@@ -55,20 +58,23 @@ def _is_retryable_error(e: Exception) -> bool:
         or "503" in msg
         or "UNAVAILABLE" in msg
         or "high demand" in msg.lower()
+        or "overloaded" in msg.lower()
     )
 
-def _retry_delay_seconds(e: Exception) -> int:
+def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     """
-    Extract the retryDelay from the error payload, e.g. 'retryDelay': '44s'.
-    503 UNAVAILABLE → short 15s retry (transient overload, usually clears fast).
-    429 RESOURCE_EXHAUSTED → falls back to 65s (1-min rolling window).
+    Exponential backoff for retries.
+    503 UNAVAILABLE → exponential: 20s, 40s, 80s, 120s, 180s
+    429 RESOURCE_EXHAUSTED → extracts retryDelay from payload or defaults to 65s.
     """
     msg = str(e)
+    # Always honour explicit retryDelay from API payload
     match = re.search(r"retryDelay['\"]?\s*:\s*['\"](\d+)s", msg)
     if match:
         return int(match.group(1)) + 5
-    if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
-        return 15  # 503s usually clear within seconds
+    if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower() or "overloaded" in msg.lower():
+        idx = min(attempt - 1, len(_503_BACKOFF) - 1)
+        return _503_BACKOFF[idx]
     return 65  # safe default for 429 quota window
 
 
@@ -133,7 +139,7 @@ async def run_pipeline(mode: str):
 
         except Exception as e:
             if _is_retryable_error(e) and attempt < MAX_RETRIES:
-                wait = _retry_delay_seconds(e)
+                wait = _retry_delay_seconds(e, attempt)
                 msg = str(e)
                 if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
                     label = f"⏳ Vertex AI model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}s…"
