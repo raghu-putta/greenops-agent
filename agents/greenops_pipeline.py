@@ -22,7 +22,7 @@ from tools.gcp_tools import (
 # ─── AGENT 1: Carbon Scout ────────────────────────────────────────────────────
 carbon_scout = Agent(
     name="carbon_scout",
-    model="gemini-3.5-flash",
+    model="gemini-2.5-pro",
     description="Scans GCP project for idle VMs, unattached disks, reserved IPs, and rightsizing recommendations.",
     instruction=f"""
 You are Carbon Scout, the first agent in the GreenOps AI pipeline.
@@ -55,7 +55,7 @@ Do NOT make any changes to resources. Scan only.
 # ─── AGENT 2: GreenOps Analyzer ───────────────────────────────────────────────
 greenops_analyzer = Agent(
     name="greenops_analyzer",
-    model="gemini-3.5-flash",
+    model="gemini-2.5-pro",
     description="Calculates carbon footprint and cost waste from Carbon Scout findings.",
     instruction="""
 You are GreenOps Analyzer, the second agent in the pipeline.
@@ -84,7 +84,7 @@ Pass your full analysis to the next agent (Optimization Executor).
 # ─── AGENT 3: Optimization Executor ───────────────────────────────────────────
 optimization_executor = Agent(
     name="optimization_executor",
-    model="gemini-3.5-flash",
+    model="gemini-2.5-pro",
     description="Presents LOW risk actions for human approval, executes only after confirmation.",
     instruction=f"""
 You are the Optimization Executor, the third agent in the GreenOps pipeline.

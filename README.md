@@ -40,7 +40,7 @@ Carbon Scout → GreenOps Analyzer → Optimization Executor → Report Generato
 ## Tech Stack
 
 - **[Google ADK](https://google.github.io/adk-docs/)** — Agent Development Kit for multi-agent orchestration
-- **[Gemini 2.5 Flash (gemini-2.5-flash)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents
+- **[Gemini 2.5 Flash (gemini-2.5-pro)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents
 - **[Google Gemini API](https://aistudio.google.com/)** — Standard Gemini API (stable, 60 RPM, no 503/404 errors)
 - **[Google Cloud Run](https://cloud.google.com/run)** — Serverless deployment
 - **[FastAPI](https://fastapi.tiangolo.com/)** — Web dashboard with SSE streaming
@@ -59,7 +59,7 @@ Browser (SSE) ←── FastAPI Dashboard ←── SequentialAgent Pipeline
                         │
               ┌─────────┴──────────┐
               │  Google Gemini API │
-              │  gemini-2.5-flash  │
+              │  gemini-2.5-pro  │
               └────────────────────┘
 ```
 

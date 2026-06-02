@@ -57,7 +57,7 @@ def smoke_test(model_name):
         print(f"  ✗  Error: {e}")
         return False
 
-for model in ["gemini-2.5-flash"]:
+for model in ["gemini-2.5-pro"]:
     if smoke_test(model):
         print(f"\n✅ Use this model in pipeline: {model}")
         break
