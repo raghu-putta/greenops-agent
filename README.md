@@ -361,7 +361,7 @@ and 8.35 kg CO₂/month.
 
 ## Built With
 
-Built by **Raghu Putta** using Google ADK + Gemini 2.5 Flash.
+Built by **Raghu Putta** using Google ADK + Gemini 3.5 Flash.
 
 ---
 
