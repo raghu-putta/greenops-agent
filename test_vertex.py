@@ -19,10 +19,10 @@ from google import genai
 async def test():
     client = genai.Client()
 
-    print("Calling gemini-1.5-flash via Gemini API...")
+    print("Calling gemini-2.5-flash via Gemini API...")
     try:
         response = await client.aio.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents="Say hello in one word."
         )
         print(f"✅ SUCCESS — Response: {response.text.strip()}")
