@@ -116,7 +116,7 @@ Output a complete execution log with:
 # ─── AGENT 4: Report Generator ────────────────────────────────────────────────
 report_generator = Agent(
     name="report_generator",
-    model="gemini-3.5 flash",
+    model="gemini-2.5-pro",
     description="Compiles final GreenOps report from all pipeline outputs.",
     instruction="""
 You are the Report Generator, the final agent in the GreenOps pipeline.
