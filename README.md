@@ -1,3 +1,7 @@
+<p align='center'>
+  <img src='./greenops-icon-3d.gif' width='200' alt='GreenOps AI'/>
+</p>
+
 # 🌱 GreenOps AI Agent
 
 **A 4-agent AI pipeline that scans Google Cloud projects for wasted resources, calculates carbon footprint, and executes safe optimizations — built with Google ADK and Gemini.**
