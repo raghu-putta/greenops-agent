@@ -40,8 +40,8 @@ Carbon Scout → GreenOps Analyzer → Optimization Executor → Report Generato
 ## Tech Stack
 
 - **[Google ADK](https://google.github.io/adk-docs/)** — Agent Development Kit for multi-agent orchestration
-- **[Gemini 2.0 Flash (gemini-2.0-flash-001)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents (stable pinned version)
-- **[Vertex AI](https://cloud.google.com/vertex-ai)** — Production-grade AI API (1000+ RPM, no quota limits)
+- **[Gemini 2.0 Flash (gemini-2.0-flash)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents
+- **[Google Gemini API](https://aistudio.google.com/)** — Standard Gemini API (stable, 60 RPM, no 503/404 errors)
 - **[Google Cloud Run](https://cloud.google.com/run)** — Serverless deployment
 - **[FastAPI](https://fastapi.tiangolo.com/)** — Web dashboard with SSE streaming
 - **Google Cloud SDK** — gcloud CLI for GCP resource scanning
@@ -58,7 +58,7 @@ Browser (SSE) ←── FastAPI Dashboard ←── SequentialAgent Pipeline
                    Cloud Run (GCP)
                         │
               ┌─────────┴──────────┐
-              │   Vertex AI API    │
+              │  Google Gemini API │
               │  gemini-2.0-flash  │
               └────────────────────┘
 ```
@@ -127,13 +127,9 @@ GCP_REGION=us-central1
 GCP_ZONE=us-central1-a
 CARBON_FACTOR_KWH=0.000233
 
-# Option A: Vertex AI (recommended for production — no quota limits)
-GOOGLE_GENAI_USE_VERTEXAI=1
-GOOGLE_CLOUD_PROJECT=your-gcp-project-id
-
-# Option B: Free Gemini API (dev only — 5 RPM limit)
-# GOOGLE_API_KEY=your-gemini-api-key
-# GOOGLE_GENAI_USE_VERTEXAI=0
+# Standard Gemini API (recommended — stable, 60 RPM, no 503/404 errors)
+GOOGLE_GENAI_USE_VERTEXAI=0
+GOOGLE_API_KEY=your-gemini-api-key
 ```
 
 ### 3. Authenticate with GCP
