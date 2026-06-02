@@ -167,7 +167,7 @@ gcloud run deploy greenops-agent \
   --source . \
   --region us-central1 \
   --project YOUR_PROJECT_ID \
-  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=1,GCP_PROJECT_ID=YOUR_PROJECT_ID
+  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=0,GOOGLE_API_KEY=YOUR_GEMINI_API_KEY,GCP_PROJECT_ID=YOUR_PROJECT_ID
 ```
 
 ---
