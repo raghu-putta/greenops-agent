@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenOps AI Agent — 4-Agent GCP Cost & Carbon Optimizer</title>
+<meta name="description" content="A 4-agent AI pipeline that scans your Google Cloud project for wasted resources, calculates carbon footprint, and executes safe optimizations with human approval. Built on Google ADK + Gemini 2.5 Flash.">
+<meta property="og:title" content="GreenOps AI Agent">
+<meta property="og:description" content="4-agent GCP cost & carbon optimization pipeline built on Google ADK + Gemini 2.5 Flash + Cloud Run.">
+<meta property="og:url" content="https://raghu-putta.github.io/greenops-agent">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Orbitron:wght@700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#030b14;color:#e2f0ff;overflow-x:hidden}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 1.5rem;background:radial-gradient(ellipse 80% 60% at 50% 0%,#0a2540 0%,#030b14 70%)}
+.hero-badge{background:rgba(0,255,180,0.1);border:1px solid #00ffb4;color:#00ffb4;font-size:12px;padding:6px 18px;border-radius:999px;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem;display:inline-block}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(2.2rem,6vw,4.5rem);font-weight:700;line-height:1.1;background:linear-gradient(135deg,#00ffb4 0%,#00c8ff 50%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
+.hero-sub{font-size:1.15rem;color:#8eb8d8;max-width:600px;line-height:1.7;margin-bottom:2.5rem}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.btn-primary{background:linear-gradient(135deg,#00ffb4,#00c8ff);color:#030b14;font-weight:700;padding:14px 32px;border-radius:999px;text-decoration:none;font-size:1rem;transition:transform .2s}
+.btn-primary:hover{transform:scale(1.05)}
+.btn-secondary{border:1.5px solid #00ffb4;color:#00ffb4;padding:14px 32px;border-radius:999px;text-decoration:none;font-size:1rem;transition:all .2s}
+.btn-secondary:hover{background:rgba(0,255,180,0.1)}
+.robot-row{display:flex;justify-content:center;gap:2rem;margin:2.5rem 0;flex-wrap:wrap}
+.robot{font-size:3.5rem;filter:drop-shadow(0 0 18px #00ffb4) drop-shadow(0 0 40px #00c8ff)}
+.section{padding:5rem 1.5rem;max-width:960px;margin:0 auto}
+.section-title{font-family:'Orbitron',monospace;font-size:1.6rem;color:#00ffb4;text-align:center;margin-bottom:0.5rem}
+.section-sub{color:#8eb8d8;text-align:center;margin-bottom:3rem;font-size:0.95rem}
+.pipeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}
+.pipe-card{background:rgba(0,200,255,0.05);border:1px solid rgba(0,200,255,0.25);border-radius:16px;padding:1.5rem;text-align:center;transition:transform .2s,box-shadow .2s}
+.pipe-card:hover{transform:translateY(-6px);box-shadow:0 0 30px rgba(0,200,255,0.2)}
+.pipe-robot{font-size:3rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 14px #00c8ff)}
+.pipe-num{font-size:10px;color:#00ffb4;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem}
+.pipe-name{font-family:'Orbitron',monospace;font-size:0.9rem;color:#00c8ff;margin-bottom:0.75rem}
+.pipe-desc{font-size:0.8rem;color:#8eb8d8;line-height:1.6}
+.arch-box{background:rgba(10,20,40,0.8);border:1px solid rgba(0,255,180,0.2);border-radius:16px;padding:2.5rem;margin:0 auto}
+.arch-flow{display:flex;flex-direction:column;gap:0.75rem;align-items:center}
+.arch-row{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;justify-content:center}
+.arch-node{background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.4);border-radius:10px;padding:0.6rem 1.2rem;font-size:0.82rem;color:#00c8ff;font-weight:500;white-space:nowrap}
+.arch-node.green{background:rgba(0,255,180,0.1);border-color:rgba(0,255,180,0.4);color:#00ffb4}
+.arch-node.purple{background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.4);color:#a78bfa}
+.arch-arrow{color:#8eb8d8;font-size:1.2rem}
+.tech-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.tech-pill{background:rgba(0,255,180,0.05);border:1px solid rgba(0,255,180,0.2);border-radius:10px;padding:0.75rem 1rem;text-align:center;font-size:0.82rem;color:#8eb8d8}
+.tech-pill span{display:block;font-size:1.3rem;margin-bottom:0.4rem}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.5rem;margin:2.5rem auto;max-width:700px}
+.stat{text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:2rem;color:#00ffb4;font-weight:700}
+.stat-lbl{font-size:0.8rem;color:#8eb8d8;margin-top:0.25rem}
+.glow-line{height:1px;background:linear-gradient(90deg,transparent,#00ffb4,#00c8ff,transparent);margin:3rem auto;max-width:960px}
+.footer{text-align:center;padding:3rem 1.5rem;color:#8eb8d8;font-size:0.85rem;border-top:1px solid rgba(0,255,180,0.1)}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-badge">🌱 Open Source · Built on Google ADK</div>
+  <h1>GreenOps AI Agent</h1>
+  <p class="hero-sub">A 4-agent AI pipeline that scans your Google Cloud project for wasted resources, calculates carbon footprint, and executes safe optimizations — with human approval.</p>
+  <div class="hero-btns">
+    <a href="https://greenops-agent-845589445410.us-central1.run.app" class="btn-primary" target="_blank">🚀 Live Demo</a>
+    <a href="https://github.com/raghu-putta/greenops-agent" class="btn-secondary" target="_blank">⭐ GitHub</a>
+  </div>
+  <div class="robot-row">
+    <span class="robot" title="Carbon Scout">🤖</span>
+    <span class="robot" title="GreenOps Analyzer">🦾</span>
+    <span class="robot" title="Optimization Executor">⚡</span>
+    <span class="robot" title="Report Generator">🧠</span>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-val">30-35%</div><div class="stat-lbl">Cloud budget wasted (avg)</div></div>
+    <div class="stat"><div class="stat-val">4</div><div class="stat-lbl">AI agents in pipeline</div></div>
+    <div class="stat"><div class="stat-val">$0</div><div class="stat-lbl">Actions without your approval</div></div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<section class="section">
+  <div class="section-title">Agent Pipeline</div>
+  <p class="section-sub">4 specialized AI agents work in sequence — each passing context to the next</p>
+  <div class="pipeline">
+    <div class="pipe-card">
+      <div class="pipe-robot">🔍</div>
+      <div class="pipe-num">Agent 1</div>
+      <div class="pipe-name">Carbon Scout</div>
+      <div class="pipe-desc">Scans GCP for idle VMs, unattached disks, unused reserved IPs, and rightsizing recommendations.</div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-robot">📊</div>
+      <div class="pipe-num">Agent 2</div>
+      <div class="pipe-name">GreenOps Analyzer</div>
+      <div class="pipe-desc">Calculates CO₂ impact, cost waste, and classifies each action as LOW / MEDIUM / HIGH risk.</div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-robot">⚡</div>
+      <div class="pipe-num">Agent 3</div>
+      <div class="pipe-name">Optimization Executor</div>
+      <div class="pipe-desc">Presents LOW risk actions for human approval. Executes only after explicit confirmation.</div>
+    </div>
+    <div class="pipe-card">
+      <div class="pipe-robot">📋</div>
+      <div class="pipe-num">Agent 4</div>
+      <div class="pipe-name">Report Generator</div>
+      <div class="pipe-desc">Compiles a full GreenOps markdown report with cost savings, CO₂ impact, and next steps.</div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<section class="section">
+  <div class="section-title">Architecture</div>
+  <p class="section-sub">From your browser to Google Cloud — how it all connects</p>
+  <div class="arch-box">
+    <div class="arch-flow">
+      <div class="arch-row">
+        <div class="arch-node green">🌐 Browser (SSE)</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node green">⚡ FastAPI Dashboard</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node green">☁️ Cloud Run</div>
+      </div>
+      <div class="arch-arrow" style="font-size:1.5rem">↓</div>
+      <div class="arch-row">
+        <div class="arch-node purple">🤖 Google ADK SequentialAgent</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node purple">✨ Gemini 2.5 Flash</div>
+      </div>
+      <div class="arch-arrow" style="font-size:1.5rem">↓</div>
+      <div class="arch-row">
+        <div class="arch-node">🖥️ GCP Compute</div>
+        <div class="arch-node">💾 Persistent Disks</div>
+        <div class="arch-node">🌐 Reserved IPs</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<section class="section">
+  <div class="section-title">Tech Stack</div>
+  <p class="section-sub">Production-grade tools powering every agent</p>
+  <div class="tech-grid">
+    <div class="tech-pill"><span>🧠</span>Google ADK</div>
+    <div class="tech-pill"><span>✨</span>Gemini 2.5 Flash</div>
+    <div class="tech-pill"><span>☁️</span>Cloud Run</div>
+    <div class="tech-pill"><span>⚡</span>FastAPI</div>
+    <div class="tech-pill"><span>🐍</span>Python 3.12</div>
+    <div class="tech-pill"><span>🔁</span>SSE Streaming</div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<section class="section">
+  <div class="section-title">Safety First</div>
+  <p class="section-sub">No action is taken without your explicit approval</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:700px;margin:0 auto">
+    <div class="pipe-card"><div style="font-size:2rem;margin-bottom:0.5rem">🟢</div><div style="color:#00ffb4;font-weight:500;margin-bottom:0.5rem">LOW Risk</div><div style="font-size:0.8rem;color:#8eb8d8">Lists actions and asks for your approval before executing</div></div>
+    <div class="pipe-card"><div style="font-size:2rem;margin-bottom:0.5rem">🟡</div><div style="color:#fbbf24;font-weight:500;margin-bottom:0.5rem">MEDIUM Risk</div><div style="font-size:0.8rem;color:#8eb8d8">Lists but never executes — marked for manual review</div></div>
+    <div class="pipe-card"><div style="font-size:2rem;margin-bottom:0.5rem">🔴</div><div style="color:#f87171;font-weight:500;margin-bottom:0.5rem">HIGH Risk</div><div style="font-size:0.8rem;color:#8eb8d8">Never executes under any circumstances — escalates only</div></div>
+  </div>
+</section>
+
+<div style="text-align:center;padding:4rem 1.5rem;background:rgba(0,255,180,0.04);border-top:1px solid rgba(0,255,180,0.1);border-bottom:1px solid rgba(0,255,180,0.1)">
+  <div style="font-family:Orbitron,monospace;font-size:1.4rem;color:#00ffb4;margin-bottom:1rem">Ready to scan your GCP project?</div>
+  <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+    <a href="https://greenops-agent-845589445410.us-central1.run.app" class="btn-primary" target="_blank">🚀 Try Live Demo</a>
+    <a href="https://github.com/raghu-putta/greenops-agent" class="btn-secondary" target="_blank">⭐ Star on GitHub</a>
+  </div>
+</div>
+
+<footer class="footer">
+  Built by <strong style="color:#00ffb4">Raghu Putta</strong> · Google ADK + Gemini 2.5 Flash · MIT License
+</footer>
+
+</body>
+</html>
