@@ -1,6 +1,6 @@
 """
-Test Vertex AI connectivity before running the full pipeline.
-Requires Application Default Credentials (gcloud auth application-default login).
+Test Gemini API connectivity before running the full pipeline.
+Requires GOOGLE_API_KEY set in .env file.
 """
 import os
 import asyncio
@@ -8,10 +8,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print("=== Vertex AI Connection Test ===")
-print(f"  Project : {os.getenv('GOOGLE_CLOUD_PROJECT')}")
-print(f"  Location: {os.getenv('GOOGLE_CLOUD_LOCATION')}")
-print(f"  VertexAI: {os.getenv('GOOGLE_GENAI_USE_VERTEXAI')}")
+print("=== Gemini API Connection Test ===")
+print(f"  API Key : {os.getenv('GOOGLE_API_KEY', 'NOT SET')[:12]}...")
+print(f"  VertexAI: {os.getenv('GOOGLE_GENAI_USE_VERTEXAI', '0')}")
 print()
 
 from google import genai
@@ -19,7 +18,7 @@ from google import genai
 async def test():
     client = genai.Client()
 
-    print("Calling gemini-2.5-flash via Gemini API...")
+    print("Testing gemini-2.5-flash via Gemini API...")
     try:
         response = await client.aio.models.generate_content(
             model="gemini-2.5-flash",

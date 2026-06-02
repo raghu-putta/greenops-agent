@@ -46,8 +46,8 @@ MAX_RETRIES = 5
 _503_BACKOFF = [20, 40, 80, 120, 180]
 
 def _is_retryable_error(e: Exception) -> bool:
-    """Return True for transient Gemini/Vertex AI errors worth retrying:
-    - 429 RESOURCE_EXHAUSTED  (free-tier quota)
+    """Return True for transient Gemini API errors worth retrying:
+    - 429 RESOURCE_EXHAUSTED  (quota limit)
     - 503 UNAVAILABLE         (model overloaded / high demand)
     """
     msg = str(e)
@@ -142,7 +142,7 @@ async def run_pipeline(mode: str):
                 wait = _retry_delay_seconds(e, attempt)
                 msg = str(e)
                 if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
-                    label = f"⏳ Vertex AI model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}s…"
+                    label = f"⏳ Gemini API model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}s…"
                 else:
                     label = (
                         f"⏳ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
@@ -164,7 +164,7 @@ async def run_pipeline(mode: str):
                 if _is_retryable_error(e):
                     friendly = (
                         "🚫 Pipeline failed after 3 retries.\n\n"
-                        "If you saw '503 UNAVAILABLE': Vertex AI was overloaded — try again in 30s.\n"
+                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded — try again in 30s.\n"
                         "If you saw '429 RESOURCE_EXHAUSTED': quota hit — wait ~1 min or enable billing."
                     )
                     await _broadcast({"type": "error", "message": friendly})

@@ -65,9 +65,9 @@ Browser (SSE) ←── FastAPI Dashboard ←── SequentialAgent Pipeline
 
 ### Reliability Features
 - **Exponential backoff retry** — 5 retries with 20s → 40s → 80s → 120s → 180s delays
-- **503 UNAVAILABLE handling** — auto-retries when Vertex AI is under high demand
+- **503 UNAVAILABLE handling** — auto-retries when Gemini API is under high demand
 - **429 RESOURCE_EXHAUSTED handling** — extracts retryDelay from API response and waits exact amount
-- **Vertex AI** — eliminates free-tier quota limits entirely
+- **Paid Gemini API** — eliminates free-tier quota limits entirely (1000+ RPM)
 
 ---
 
@@ -361,7 +361,7 @@ and 8.35 kg CO₂/month.
 
 ## Built With
 
-Built by **Raghu Putta** using Google ADK + Gemini 2.0 Flash on Vertex AI.
+Built by **Raghu Putta** using Google ADK + Gemini 2.5 Flash.
 
 ---
 
