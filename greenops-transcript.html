@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GreenOps — End-to-End Build Transcript</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --green-main:  #1e6b3c;
+    --green-mid:   #2d8653;
+    --green-soft:  #4aa86e;
+    --green-light: #a7d9b8;
+    --green-bg:    #e6f4ec;
+    --blue-main:   #1a56a0;
+    --bg-body:     #eaf7f0;
+    --bg-card:     #ffffff;
+    --bg-card2:    #f2fbf6;
+    --border:      rgba(30,107,60,0.20);
+    --text-primary:#0d2b18;
+    --text-body:   #1a3d28;
+    --text-muted:  #3d6e52;
+    --text-dim:    #6a9a7a;
+    --shadow:      0 2px 18px rgba(30,107,60,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(155deg, #c8e8d5 0%, #dff5e9 30%, #eaf7f0 60%, #d8f0e3 85%, #c8e8d5 100%);
+    background-attachment: fixed;
+    color: var(--text-body);
+    line-height: 1.7;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── WATERMARK ── */
+  .watermark {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .watermark-inner {
+    font-size: 55vw;
+    line-height: 1;
+    opacity: 0.14;
+    user-select: none;
+    filter: grayscale(0.1) saturate(1.8);
+    transform: rotate(-8deg);
+  }
+
+  /* All content sits above watermark */
+  .hero, .content, footer { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(30,107,60,0.09) 0%, transparent 100%);
+  }
+
+  .hero-content { max-width: 860px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(30,107,60,0.12);
+    border: 1px solid rgba(30,107,60,0.35);
+    border-radius: 999px;
+    padding: 6px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-main);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 .word-green { color: var(--green-main); }
+  .hero h1 .word-dark  { color: #0d2b18; }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: #2e5c3e;
+    max-width: 620px;
+    margin: 0 auto 48px;
+    font-weight: 400;
+    line-height: 1.75;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+  .hero-meta-item .val {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--green-main);
+    line-height: 1;
+  }
+  .hero-meta-item .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    animation: pulse 2s infinite;
+  }
+  .scroll-hint::after {
+    content: '';
+    width: 1px;
+    height: 44px;
+    background: linear-gradient(to bottom, var(--green-mid), transparent);
+  }
+  @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  /* ── CONTENT ── */
+  .content { max-width: 900px; margin: 0 auto; padding: 0 40px 120px; }
+
+  /* ── CHAPTER HEADERS ── */
+  .chapter { margin: 100px 0 60px; }
+
+  .chapter-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--green-soft);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chapter-num::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: var(--green-soft);
+    border-radius: 2px;
+  }
+
+  .chapter h2 {
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.1;
+  }
+
+  .chapter-line {
+    width: 56px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green-main), transparent);
+    margin-top: 18px;
+    border-radius: 2px;
+  }
+
+  /* ── NARRATION ── */
+  .narration {
+    font-size: 1.05rem;
+    color: var(--text-body);
+    margin-bottom: 28px;
+    font-weight: 400;
+    max-width: 820px;
+  }
+  .narration strong { color: var(--text-primary); font-weight: 700; }
+  .narration em     { color: var(--green-main); font-style: normal; font-weight: 600; }
+
+  /* ── STEP CARDS ── */
+  .steps { display: flex; flex-direction: column; gap: 18px; margin: 32px 0; }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .step:hover { border-color: var(--green-soft); box-shadow: 0 4px 24px rgba(30,107,60,0.14); }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(30,107,60,0.1);
+    border: 2px solid rgba(30,107,60,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--green-main);
+    margin-top: 2px;
+  }
+
+  .step-body h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .step-body p {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+  .step-body p strong { color: var(--text-body); font-weight: 600; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #0f2419;
+    border: 1px solid #2d5e3a;
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 24px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #071a0f;
+    border-bottom: 1px solid #1e4728;
+  }
+  .code-lang {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #6ec487;
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red    { background: #ef4444; opacity: 0.7; }
+  .dot-yellow { background: #f59e0b; opacity: 0.7; }
+  .dot-green  { background: #22c55e; opacity: 0.7; }
+
+  .code-body {
+    padding: 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #b8d4be;
+    overflow-x: auto;
+  }
+  .code-body .kw  { color: #b39ddb; }
+  .code-body .fn  { color: #82b1ff; }
+  .code-body .str { color: #a5d6a7; }
+  .code-body .cm  { color: #4a6e52; font-style: italic; }
+  .code-body .var { color: #ffd180; }
+  .code-body .num { color: #ff8a65; }
+  .code-body .ok  { color: #69f0ae; font-weight: 700; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    box-shadow: var(--shadow);
+  }
+  .callout-green  { background: rgba(34,197,94,0.10); border: 1px solid rgba(34,197,94,0.30); }
+  .callout-blue   { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.25); }
+  .callout-yellow { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.28); }
+  .callout-red    { background: rgba(239,68,68,0.08);  border: 1px solid rgba(239,68,68,0.28); }
+  .callout-orange { background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.28); }
+
+  .callout-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+
+  .callout-content h5 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .callout-content p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .callout-content p strong { color: var(--text-body); font-weight: 700; }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 40px;
+    margin: 32px 0;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .arch-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+  .arch-box {
+    background: rgba(30,107,60,0.08);
+    border: 1px solid rgba(30,107,60,0.28);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--green-main);
+    white-space: nowrap;
+  }
+  .arch-box.blue {
+    background: rgba(26,86,160,0.07);
+    border-color: rgba(26,86,160,0.25);
+    color: var(--blue-main);
+  }
+  .arch-box.muted {
+    background: rgba(0,0,0,0.04);
+    border-color: rgba(0,0,0,0.12);
+    color: var(--text-muted);
+  }
+  .arch-arrow { color: var(--green-soft); font-size: 1.25rem; }
+  .arch-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 20px 0 8px;
+    font-weight: 700;
+  }
+
+  /* ── AGENT CARDS ── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+  }
+  @media (max-width: 600px) { .agents-grid { grid-template-columns: 1fr; } }
+
+  .agent-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s;
+  }
+  .agent-card:hover { box-shadow: 0 6px 28px rgba(30,107,60,0.15); }
+  .agent-card .a-icon { font-size: 1.8rem; margin-bottom: 12px; }
+  .agent-card h4 {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .agent-card p { font-size: 0.86rem; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── ENV TABLE ── */
+  .env-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 0.88rem;
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .env-table th {
+    text-align: left;
+    padding: 12px 18px;
+    background: rgba(30,107,60,0.08);
+    color: var(--green-main);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  .env-table td {
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(30,107,60,0.08);
+    vertical-align: top;
+  }
+  .env-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--green-main);
+    font-size: 0.82rem;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .env-table td:last-child { color: var(--text-muted); }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    background: #071a0f;
+    border: 2px solid #22c55e;
+    border-radius: 14px;
+    padding: 26px 30px;
+    margin: 24px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.9;
+    box-shadow: 0 4px 24px rgba(34,197,94,0.15);
+  }
+  .result-card .ok    { color: #4ade80; }
+  .result-card .key   { color: #60a5fa; }
+  .result-card .val   { color: #d1fae5; }
+  .result-card .check { color: #4ade80; font-weight: 700; }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; margin: 40px 0; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--green-main), rgba(30,107,60,0.08));
+  }
+  .tl-item {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+  .tl-dot {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2px solid var(--green-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--green-main);
+    z-index: 1;
+    box-shadow: 0 0 0 4px rgba(30,107,60,0.08);
+  }
+  .tl-body { flex: 1; padding-top: 6px; padding-bottom: 8px; }
+  .tl-body h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .tl-body p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* ── FINAL STATUS ── */
+  .final-status {
+    background: linear-gradient(135deg, #c8e6c9 0%, #e8f5e9 100%);
+    border: 1px solid rgba(30,107,60,0.25);
+    border-radius: 22px;
+    padding: 52px 48px;
+    text-align: center;
+    margin: 80px 0;
+    box-shadow: 0 8px 40px rgba(30,107,60,0.12);
+  }
+  .final-status h3 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--green-main);
+    margin-bottom: 14px;
+  }
+  .final-status p { color: var(--text-muted); margin-bottom: 36px; font-size: 1.05rem; }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 600px) { .status-grid { grid-template-columns: 1fr; } }
+  .status-item {
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(30,107,60,0.2);
+    border-radius: 14px;
+    padding: 22px 18px;
+    box-shadow: var(--shadow);
+  }
+  .status-item .s-icon { font-size: 1.6rem; margin-bottom: 10px; }
+  .status-item h5 { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); margin-bottom: 5px; }
+  .status-item p  { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* ── SECURITY BOX ── */
+  .security-rules {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.22);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .security-rules h5 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #b91c1c;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .security-rules ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .security-rules li {
+    font-size: 0.88rem;
+    color: var(--text-body);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .security-rules li::before { content: '🔒'; flex-shrink: 0; font-size: 0.9rem; }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid rgba(30,107,60,0.2);
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(4px);
+  }
+  .footer strong { color: var(--green-main); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(30,107,60,0.3), transparent);
+    margin: 64px 0;
+  }
+
+  /* ── STAGE BADGE ── */
+  .stage-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .stage-badge.green { background: rgba(30,107,60,0.1); color: var(--green-main); border: 1px solid rgba(30,107,60,0.25); }
+  .stage-badge.orange{ background: rgba(249,115,22,0.1); color: #c2410c; border: 1px solid rgba(249,115,22,0.28); }
+  .stage-badge.blue  { background: rgba(26,86,160,0.09); color: var(--blue-main); border: 1px solid rgba(26,86,160,0.25); }
+
+  /* ── DIFF / BEFORE-AFTER ── */
+  .diff-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: var(--shadow);
+  }
+  .diff-header {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .diff-header.bad  { background: rgba(239,68,68,0.08); color: #b91c1c; }
+  .diff-header.good { background: rgba(34,197,94,0.09); color: var(--green-main); }
+  .diff-body {
+    padding: 18px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-body);
+  }
+  .diff-body .del { color: #dc2626; text-decoration: line-through; opacity: 0.8; }
+  .diff-body .add { color: #16a34a; font-weight: 600; }
+
+  /* ── SUCCESS BANNER ── */
+  .success-banner {
+    background: linear-gradient(135deg, #052e16 0%, #14532d 100%);
+    border-radius: 18px;
+    padding: 40px;
+    text-align: center;
+    margin: 40px 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(5,46,22,0.25);
+  }
+  .success-banner::before {
+    content: '✓';
+    position: absolute;
+    font-size: 200px;
+    opacity: 0.04;
+    right: -20px;
+    top: -40px;
+    color: #4ade80;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .success-banner h3 { font-size: 1.5rem; font-weight: 800; color: #4ade80; margin-bottom: 10px; }
+  .success-banner p  { color: #86efac; font-size: 0.95rem; }
+
+  .agents-complete {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+  @media(max-width:600px){ .agents-complete{ grid-template-columns: repeat(2,1fr); } }
+  .ac-item {
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 10px;
+    padding: 14px 10px;
+    text-align: center;
+  }
+  .ac-item .ac-icon { font-size: 1.4rem; }
+  .ac-item .ac-name { font-size: 0.75rem; font-weight: 600; color: #86efac; margin-top: 6px; }
+  .ac-item .ac-status { font-size: 0.7rem; color: #4ade80; margin-top: 3px; font-weight: 700; }
+
+  /* ── FILES TABLE ── */
+  .files-grid { display: flex; flex-direction: column; gap: 14px; margin: 28px 0; }
+  .file-row {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .file-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 2px; }
+  .file-body h4 { font-size: 0.96rem; font-weight: 700; color: var(--text-primary); margin-bottom: 5px; }
+  .file-body p  { font-size: 0.87rem; color: var(--text-muted); line-height: 1.55; }
+
+</style>
+</head>
+<body>
+
+<!-- ── WATERMARK ── -->
+<div class="watermark" aria-hidden="true">
+  <div class="watermark-inner">🌱</div>
+</div>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="badge">🌿 Build Transcript</div>
+    <h1>
+      <span class="word-green">GreenOps</span><br>
+      <span class="word-dark">End-to-End</span>
+    </h1>
+    <p class="hero-sub">
+      A complete, human-spoken walkthrough of how we designed, built, deployed,
+      debugged, and automated a real-time GCP cost &amp; carbon intelligence agent —
+      from zero to live alerts and a fully running 4-agent AI pipeline.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="val">3</span>
+        <span class="lbl">Stages</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="val">4</span>
+        <span class="lbl">AI Agents</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="val">1/hr</span>
+        <span class="lbl">Auto Scans</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="val">2</span>
+        <span class="lbl">Alert Channels</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="val">✓</span>
+        <span class="lbl">Pipeline Live</span>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">scroll</div>
+</section>
+
+<!-- ═══════════════════════════════ CONTENT ═══════════════════════════════ -->
+<div class="content">
+
+  <!-- Overview -->
+  <div class="chapter">
+    <div class="chapter-num">Overview</div>
+    <h2>What We Actually Built</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Let me walk you through this in plain language. What we built is called <em>GreenOps</em> —
+    an AI-powered agent that watches your Google Cloud Platform project 24/7,
+    finds things that are wasting money and carbon, and shouts at you about it in Gmail and Slack.
+  </p>
+
+  <p class="narration">
+    The whole thing runs on <strong>Google Cloud Run</strong> — fully serverless, no servers to manage.
+    Every hour, automatically, it wakes up, scans your GCP project using a 4-agent AI pipeline powered
+    by Google ADK + Gemini, and sends you a full report.
+  </p>
+
+  <div class="arch-diagram">
+    <div class="arch-label">Full System Architecture</div>
+    <div class="arch-row">
+      <div class="arch-box blue">☁️ GCP Project<br><small style="font-size:10px;opacity:0.7">budget-finance-mcp</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">🤖 4 AI Agents<br><small style="font-size:10px;opacity:0.7">Google ADK + Gemini</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">⚡ FastAPI App<br><small style="font-size:10px;opacity:0.7">Cloud Run</small></div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-arrow" style="transform:rotate(90deg)">→</div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-box muted">🕐 Cloud Scheduler<br><small style="font-size:10px;opacity:0.7">0 * * * *  Every Hour</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box">/scheduled-scan<br><small style="font-size:10px;opacity:0.7">POST + Secret Header</small></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box blue">📧 Gmail + 💬 Slack<br><small style="font-size:10px;opacity:0.7">Always alert</small></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════ STAGE 1 ═══════════ -->
+  <div class="chapter">
+    <div class="stage-badge green">Stage 1</div>
+    <h2>Building the Intelligence Core</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Stage 1 was about building the <em>brain</em>. Before we could alert anyone about anything,
+    we needed an AI pipeline that actually understands cloud infrastructure — not just lists resources,
+    but genuinely <strong>thinks about what's wasteful and why.</strong>
+  </p>
+  <p class="narration">
+    We used <strong>Google Agent Development Kit (ADK)</strong> with Gemini Flash as the underlying model.
+    ADK lets you build multi-agent pipelines — chains of specialized AI agents that each handle one piece of the puzzle.
+  </p>
+
+  <div class="agents-grid">
+    <div class="agent-card">
+      <div class="a-icon">🛰️</div>
+      <h4>Carbon Scout</h4>
+      <p>Scans GCP Compute API for idle VMs, unattached persistent disks, and unused reserved IPs. The data collector — no judgment, just facts.</p>
+    </div>
+    <div class="agent-card">
+      <div class="a-icon">🧠</div>
+      <h4>GreenOps Analyzer</h4>
+      <p>Takes raw findings and calculates real dollar cost and CO₂ emissions. Applies carbon intensity factors (0.000233 kg CO₂/kWh) to compute environmental impact.</p>
+    </div>
+    <div class="agent-card">
+      <div class="a-icon">⚙️</div>
+      <h4>Optimization Executor</h4>
+      <p>Proposes specific actions — stop this VM, release that IP — but <strong>never auto-executes.</strong> Human approval gate is non-negotiable.</p>
+    </div>
+    <div class="agent-card">
+      <div class="a-icon">📋</div>
+      <h4>Report Generator</h4>
+      <p>Formats everything into human-readable summaries, HTML emails, and Slack Block Kit messages. Structures the story, not just the data.</p>
+    </div>
+  </div>
+
+  <p class="narration">
+    These four agents run in a <strong>sequential pipeline</strong> — Scout → Analyzer → Executor → Reporter.
+    Each one feeds its output to the next. The result is a complete, contextualized intelligence report
+    with actual savings estimates and carbon numbers attached to real GCP resource names.
+  </p>
+
+  <!-- Part 2: FastAPI -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 1 — Part 2</div>
+    <h2>The FastAPI Dashboard</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    We wrapped the entire agent pipeline in a <strong>FastAPI web application</strong> —
+    the file is <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">app.py</code>.
+    This gives us a live streaming dashboard using <em>Server-Sent Events (SSE)</em>,
+    so you can watch the AI agents think in real-time in your browser.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>GET / — Live Dashboard</h4>
+        <p>The main streaming page. Opens an SSE connection and streams each agent's output token-by-token to your browser. Watch Carbon Scout finding resources and Analyzer computing costs — all live.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>GET /health — Health Check</h4>
+        <p>Simple endpoint Cloud Run uses to verify the service is alive. Returns <code style="color:var(--green-main);font-size:0.9em">{"status": "ok"}</code>.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>POST /scheduled-scan — Automation Trigger</h4>
+        <p>Added in Stage 2. Protected by <code style="color:var(--green-main);font-size:0.9em">X-Scheduler-Secret</code> header. Cloud Scheduler calls this every hour. Runs the full scan and sends Gmail + Slack notifications.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Part 3: Deployment -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 1 — Part 3</div>
+    <h2>Deploying to Cloud Run</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    We deployed the app to <strong>Google Cloud Run</strong> — serverless containers that scale to zero
+    when not in use and spin up in milliseconds. The service URL is your permanent dashboard address.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+      </div>
+      <div class="code-lang">PowerShell — Deploy Command</div>
+    </div>
+    <div class="code-body">
+gcloud run deploy greenops-agent \<br>
+&nbsp;&nbsp;--source . \<br>
+&nbsp;&nbsp;--region us-central1 \<br>
+&nbsp;&nbsp;--allow-unauthenticated<br><br>
+<span class="cm"># Result:</span><br>
+<span class="str">Service URL: https://greenops-agent-845589445410.us-central1.run.app</span>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <h5>Stage 1 Complete</h5>
+      <p>Live dashboard at <strong>https://greenops-agent-845589445410.us-central1.run.app</strong> — streaming AI analysis of your GCP project in real-time.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════ STAGE 2 ═══════════ -->
+  <div class="chapter">
+    <div class="stage-badge green">Stage 2</div>
+    <h2>Automated Hourly Alerts</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Stage 1 was reactive — you had to open the dashboard to see results.
+    Stage 2 made it <em>proactive</em>. Now GreenOps comes to you.
+    Every single hour, without you doing anything, it scans and sends a full report
+    to your Gmail inbox and your Slack channel simultaneously.
+  </p>
+
+  <!-- scheduler.py -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 1</div>
+    <h2>Building scheduler.py</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    We created a dedicated <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">scheduler.py</code> module —
+    a standalone notification engine with three main functions, each doing exactly one thing.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>run_scan() — The GCP Scanner</h4>
+        <p>Calls GCP Compute API directly to find: <strong>idle VMs</strong> (running but 0 CPU for hours), <strong>unattached persistent disks</strong> (provisioned but not mounted), <strong>unused reserved IPs</strong> (allocated but not pointing anywhere). Returns raw findings dict.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>send_email(data) — Gmail SMTP</h4>
+        <p>Sends a rich HTML email with findings table, cost savings estimate, and CO₂ impact. Uses <strong>Gmail App Password</strong> (not your real Gmail password) via <code style="color:var(--green-main);font-size:0.9em">smtplib.SMTP_SSL</code> on port 465. Always sends — even when findings = 0.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>send_slack(data) — Slack Block Kit</h4>
+        <p>Posts a formatted Slack message using <strong>Block Kit</strong> — Slack's rich formatting system. Sections, dividers, bold text, stats. Uses Incoming Webhooks so no Slack bot token is needed. Just a URL.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>run_scheduled_scan() — The Orchestrator</h4>
+        <p>Calls all three in sequence: <code style="color:var(--green-main);font-size:0.9em">run_scan() → send_email() → send_slack()</code>. Returns summary dict with <code style="color:var(--green-main);font-size:0.9em">email_sent: True</code> and <code style="color:var(--green-main);font-size:0.9em">slack_sent: True</code> for logging.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gmail -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 2</div>
+    <h2>Gmail App Password Setup</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    You can't use your regular Gmail password to send email programmatically — Google blocks it for security.
+    Instead, Google gives you a special <em>App Password</em> — a 16-character code that only works for that
+    one app, and can be revoked any time without changing your real password.
+  </p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">1</div>
+      <div class="tl-body">
+        <h4>Enable 2-Factor Authentication</h4>
+        <p>myaccount.google.com → Security → 2-Step Verification → Enable. Required before App Passwords work.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">2</div>
+      <div class="tl-body">
+        <h4>Generate the App Password</h4>
+        <p>myaccount.google.com → Security → App Passwords → Select "Mail" → Generate. Got a 16-char code stored securely in .env.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">3</div>
+      <div class="tl-body">
+        <h4>Add to .env file</h4>
+        <p><code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx</code> — never committed to GitHub.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slack -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 3</div>
+    <h2>Slack App &amp; Incoming Webhook</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    For Slack notifications, we used <strong>Incoming Webhooks</strong> — not a full OAuth bot.
+    You create a webhook URL, and any app that knows that URL can POST a message to your Slack channel.
+    Clean, secure, no token management.
+  </p>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">🏗️</div>
+      <div class="tl-body">
+        <h4>Created GreenOps Slack App</h4>
+        <p>api.slack.com/apps → Create New App → "From scratch" → Name: GreenOps → Workspace: raama. App ID: A0B5XD33VDM.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🎨</div>
+      <div class="tl-body">
+        <h4>Added GreenOps Icon &amp; Branding</h4>
+        <p>Generated 512×512 PNG icon using cairosvg from SVG source. Uploaded to Slack app. Background color: <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">#1d4ed8</code>.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🔗</div>
+      <div class="tl-body">
+        <h4>Enabled Incoming Webhooks</h4>
+        <p>Features → Incoming Webhooks → Toggle ON → "Add New Webhook to Workspace" → Selected channel: <strong>#greenops-alerts</strong> → Authorized.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">📋</div>
+      <div class="tl-body">
+        <h4>Copied Webhook URL to .env</h4>
+        <p><code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- .env Summary -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 4</div>
+    <h2>The Complete .env File</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    All secrets live in <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">.env</code> —
+    listed in <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">.gitignore</code>
+    and <strong>never committed to GitHub.</strong>
+  </p>
+
+  <table class="env-table">
+    <thead>
+      <tr><th>Variable</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GCP_PROJECT_ID</td><td>GCP project to scan — budget-finance-mcp</td></tr>
+      <tr><td>GCP_REGION</td><td>Cloud Run deployment region — us-central1</td></tr>
+      <tr><td>GCP_ZONE</td><td>Compute zone for VM scanning — us-central1-a</td></tr>
+      <tr><td>CARBON_FACTOR_KWH</td><td>CO₂ intensity factor in kg/kWh — 0.000233</td></tr>
+      <tr><td>GOOGLE_API_KEY</td><td>Gemini via AI Studio free tier API key</td></tr>
+      <tr><td>GOOGLE_GENAI_USE_VERTEXAI</td><td>0 = use AI Studio (not Vertex AI billing)</td></tr>
+      <tr><td>GMAIL_USER</td><td>Your Gmail address for sending alerts</td></tr>
+      <tr><td>GMAIL_APP_PASSWORD</td><td>16-char App Password (not your real Gmail password)</td></tr>
+      <tr><td>GMAIL_TO</td><td>Recipient email address</td></tr>
+      <tr><td>SLACK_WEBHOOK_URL</td><td>Incoming Webhook URL for #greenops-alerts</td></tr>
+      <tr><td>SCHEDULER_SECRET</td><td>Auth token for /scheduled-scan endpoint</td></tr>
+    </tbody>
+  </table>
+
+  <div class="security-rules">
+    <h5>🛡️ Security Rules (Non-Negotiable)</h5>
+    <ul>
+      <li>NEVER commit <code style="color:#b91c1c;font-family:'JetBrains Mono',monospace;font-size:0.9em">gcp-sa-key.json</code> to GitHub</li>
+      <li>NEVER commit <code style="color:#b91c1c;font-family:'JetBrains Mono',monospace;font-size:0.9em">.env</code> to GitHub — it's in .gitignore</li>
+      <li>Human Approval Gate — Optimization Executor never auto-runs high-risk actions</li>
+      <li>Don't mix secrets between different GCP projects</li>
+    </ul>
+  </div>
+
+  <!-- /scheduled-scan -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 5</div>
+    <h2>The /scheduled-scan Endpoint</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    We added one new POST endpoint to <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">app.py</code> —
+    the automation trigger. Protected by a shared secret so only Cloud Scheduler can call it.
+    Anyone without the right header gets a 401.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+      </div>
+      <div class="code-lang">Python — app.py</div>
+    </div>
+    <div class="code-body">
+<span class="kw">@app</span>.post(<span class="str">"/scheduled-scan"</span>)<br>
+<span class="kw">async def</span> <span class="fn">scheduled_scan</span>(x_scheduler_secret: <span class="var">str</span> = Header(default=<span class="str">""</span>)):<br>
+&nbsp;&nbsp;expected = os.getenv(<span class="str">"SCHEDULER_SECRET"</span>, <span class="str">""</span>)<br>
+&nbsp;&nbsp;<span class="kw">if</span> x_scheduler_secret != expected:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">raise</span> HTTPException(status_code=<span class="num">401</span>, detail=<span class="str">"Invalid scheduler secret"</span>)<br><br>
+&nbsp;&nbsp;<span class="kw">from</span> scheduler <span class="kw">import</span> run_scheduled_scan<br>
+&nbsp;&nbsp;result = <span class="kw">await</span> asyncio.get_event_loop().run_in_executor(<span class="var">None</span>, run_scheduled_scan)<br>
+&nbsp;&nbsp;<span class="kw">return</span> JSONResponse(result)
+    </div>
+  </div>
+
+  <!-- Cloud Scheduler -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 6</div>
+    <h2>Cloud Scheduler — The Heartbeat</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Google Cloud Scheduler is like a cron job in the cloud — it fires HTTP requests on a schedule.
+    We enabled the Cloud Scheduler API and created one job that fires every hour on the hour.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+      </div>
+      <div class="code-lang">PowerShell — Create Scheduler Job</div>
+    </div>
+    <div class="code-body">
+gcloud scheduler jobs create http greenops-hourly-scan \<br>
+&nbsp;&nbsp;--schedule=<span class="str">"0 * * * *"</span> \<br>
+&nbsp;&nbsp;--uri=<span class="str">"https://greenops-agent-845589445410.us-central1.run.app/scheduled-scan"</span> \<br>
+&nbsp;&nbsp;--http-method=POST \<br>
+&nbsp;&nbsp;--headers=<span class="str">"X-Scheduler-Secret=greenops-secret-2026,Content-Type=application/json"</span> \<br>
+&nbsp;&nbsp;--message-body=<span class="str">"{}"</span> \<br>
+&nbsp;&nbsp;--location=us-central1 \<br>
+&nbsp;&nbsp;--time-zone=<span class="str">"America/Chicago"</span><br><br>
+<span class="cm"># 0 * * * * = Minute 0, Every Hour, Every Day</span>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">🕐</div>
+    <div class="callout-content">
+      <h5>Job Schedule Details</h5>
+      <p>Name: <strong>greenops-hourly-scan</strong> | State: <strong>ENABLED</strong> |
+      First run: <strong>2026-05-27T05:00:00Z</strong> |
+      Retry policy: up to 5 retries with exponential backoff</p>
+    </div>
+  </div>
+
+  <!-- Stage 2 Live Test -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 2 — Part 7</div>
+    <h2>The Live Test — Email &amp; Slack Working</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    We didn't wait for the next scheduled run. We manually triggered the endpoint
+    to confirm the full pipeline — scan → email → Slack — was actually working.
+  </p>
+
+  <div class="result-card">
+<span class="key">status</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="ok">ok</span><br>
+<span class="key">scanned_at</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">2026-05-27 04:47 UTC</span><br>
+<span class="key">project</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">budget-finance-mcp</span><br>
+<span class="key">findings</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">0</span><br>
+<span class="key">total_savings</span>&nbsp;<span class="val">:</span> <span class="val">0</span><br>
+<span class="key">co2_kg</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">0.0</span><br>
+<span class="key">email_sent</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="check">True ✓</span><br>
+<span class="key">slack_sent</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="check">True ✓</span>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <h5>Stage 2 Complete</h5>
+      <p>Automated hourly scanning live. Gmail + Slack confirmed working. 0 findings means the project is clean right now — when something wasteful appears, you'll hear about it within the hour.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════ STAGE 3 ═══════════ -->
+  <div class="chapter">
+    <div class="stage-badge orange">Stage 3</div>
+    <h2>Debugging the Dashboard — From Broken to Live</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    After Stage 2 was confirmed working, we opened the dashboard browser UI to run a live test
+    with all 4 agents streaming in real-time. That's when the problems started — <strong>four separate issues,
+    one after another</strong>. Here's exactly what broke and how we fixed each one.
+  </p>
+
+  <!-- Problem 1 -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Problem 1</div>
+    <h2>API Key Invalid — Wrong Service Updated</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Clicking <strong>Run Real GCP</strong> on the dashboard returned:
+    <code style="color:#b91c1c;font-family:'JetBrains Mono',monospace;font-size:0.9em">400 INVALID_ARGUMENT — API key not valid — API_KEY_INVALID</code>.
+    We updated the Gemini API key — but the error persisted after the deploy.
+  </p>
+
+  <div class="callout callout-orange">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <h5>Root Cause: Two separate Cloud Run services</h5>
+      <p>The browser was pointing at <strong>greenops-dashboard-845589445410.us-central1.run.app</strong> but the <code>gcloud run services update</code> command was run against <strong>greenops-agent</strong>. Two different services, two different env vars. We updated the wrong one.</p>
+    </div>
+  </div>
+
+  <div class="diff-box">
+    <div class="diff-header bad">❌ What we ran (wrong)</div>
+    <div class="diff-body">gcloud run services update <span class="del">greenops-agent</span> --update-env-vars "GOOGLE_API_KEY=..."</div>
+  </div>
+  <div class="diff-box">
+    <div class="diff-header good">✅ What we needed (correct)</div>
+    <div class="diff-body">gcloud run services update <span class="add">greenops-dashboard</span> --update-env-vars "GOOGLE_API_KEY=..."</div>
+  </div>
+
+  <!-- Problem 2 -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Problem 2</div>
+    <h2>The Placeholder Key — Literal Text in Production</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Even after targeting the correct service, the error persisted.
+    We ran a diagnostic to check what was actually set as the <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">GOOGLE_API_KEY</code> on the service.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots">
+        <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+      </div>
+      <div class="code-lang">PowerShell — Diagnostic</div>
+    </div>
+    <div class="code-body">
+gcloud run services describe greenops-dashboard \<br>
+&nbsp;&nbsp;--region us-central1 \<br>
+&nbsp;&nbsp;--format <span class="str">"value(spec.template.spec.containers[0].env)"</span><br><br>
+<span class="cm"># Output showed:</span><br>
+<span class="var">GOOGLE_API_KEY</span> = <span class="del" style="color:#dc2626">YOUR_KEY_HERE</span>  <span class="cm">← literal placeholder text!</span>
+    </div>
+  </div>
+
+  <div class="callout callout-red">
+    <div class="callout-icon">🚨</div>
+    <div class="callout-content">
+      <h5>Root Cause: Placeholder was never replaced</h5>
+      <p>The command template showed <code>GOOGLE_API_KEY=YOUR_KEY_HERE</code> — and that literal string was deployed to the service without substituting the real key value. Classic copy-paste mistake.</p>
+    </div>
+  </div>
+
+  <!-- Problem 3 -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Problem 3</div>
+    <h2>429 Resource Exhausted — Free Tier Quota Depleted</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    After deploying the real Gemini API key to the correct service, the dashboard threw a new error:
+    <code style="color:#b91c1c;font-family:'JetBrains Mono',monospace;font-size:0.9em">429 RESOURCE_EXHAUSTED — Quota exceeded for quota metric 'generate_content_request_count'</code>
+  </p>
+
+  <div class="callout callout-orange">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <h5>Root Cause: Daily free quota exhausted</h5>
+      <p>AI Studio's free tier key gives <strong>1,500 Gemini API requests/day per project.</strong>
+      That project's quota had been fully consumed during the earlier debugging runs —
+      every failed attempt still counted as requests. Once the quota is gone for the day, the only options are: wait 24 hours, or generate a fresh key in a new GCP project (which has its own independent 1,500/day quota).</p>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Option A — Wait for quota reset (rejected)</h4>
+        <p>The free quota resets at midnight Pacific. Waiting ~24 hours wasn't acceptable when we were this close to a working system.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Option B — New key in a new GCP project (chosen)</h4>
+        <p>Went to <strong>aistudio.google.com/app/apikey</strong> → Created a new project → Generated a fresh key.
+        Each GCP project gets its own independent 1,500 req/day quota. Instant fresh start.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Updated both Cloud Run services</h4>
+        <p>New key pushed to both services simultaneously:
+        <code style="color:var(--green-main);font-size:0.85em;display:block;margin-top:8px">gcloud run services update greenops-dashboard --region us-central1 --update-env-vars "GOOGLE_API_KEY=NEW_KEY"</code>
+        <code style="color:var(--green-main);font-size:0.85em;display:block;margin-top:4px">gcloud run services update greenops-agent --region us-central1 --update-env-vars "GOOGLE_API_KEY=NEW_KEY"</code>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Problem 4 -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Problem 4</div>
+    <h2>gcloud CLI Not Found Inside Cloud Run</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    After the API key was fixed and correctly deployed, the dashboard showed a new error:
+    <code style="color:#b91c1c;font-family:'JetBrains Mono',monospace;font-size:0.9em">gcloud not found. Run: gcloud auth application-default login</code>
+  </p>
+
+  <p class="narration">
+    This one was deeper. The original <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">tools/gcp_tools.py</code>
+    was calling <strong>gcloud CLI as a subprocess</strong> — meaning it ran shell commands like
+    <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">subprocess.run(["gcloud", "compute", "instances", "list", ...])</code>.
+    That works perfectly on your Windows laptop where gcloud is installed. But inside a Cloud Run container?
+    There is no <code>gcloud</code> binary. The container is a minimal Linux image.
+  </p>
+
+  <div class="diff-box">
+    <div class="diff-header bad">❌ Old approach — gcloud subprocess (breaks in Cloud Run)</div>
+    <div class="diff-body">
+<span class="del">import subprocess</span><br>
+<span class="del">def _gcloud(*args):</span><br>
+<span class="del">&nbsp;&nbsp;gcloud_cmd = shutil.which("gcloud")  # None in Cloud Run!</span><br>
+<span class="del">&nbsp;&nbsp;if gcloud_cmd is None:</span><br>
+<span class="del">&nbsp;&nbsp;&nbsp;&nbsp;raise FileNotFoundError("gcloud not found")</span><br>
+<span class="del">&nbsp;&nbsp;return subprocess.run([gcloud_cmd, *args], ...)</span>
+    </div>
+  </div>
+
+  <div class="diff-box">
+    <div class="diff-header good">✅ New approach — Python SDK (works everywhere via ADC)</div>
+    <div class="diff-body">
+<span class="add">from google.cloud import compute_v1</span><br>
+<span class="add">from google.cloud import recommender_v1</span><br><br>
+<span class="add">def list_idle_vms(project_id: str) -&gt; dict:</span><br>
+<span class="add">&nbsp;&nbsp;client = compute_v1.InstancesClient()  # ADC auto-auth</span><br>
+<span class="add">&nbsp;&nbsp;for zone, data in client.aggregated_list(project=project_id):</span><br>
+<span class="add">&nbsp;&nbsp;&nbsp;&nbsp;# returns real data — no CLI needed</span>
+    </div>
+  </div>
+
+  <p class="narration">
+    In Cloud Run, <strong>Application Default Credentials (ADC)</strong> are automatically available
+    via the service's attached service account. The Python SDK picks them up without any configuration.
+    No gcloud, no JSON key file, no auth command — it just works.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Rewrote tools/gcp_tools.py</h4>
+        <p>Replaced all <code style="color:var(--green-main);font-size:0.9em">subprocess.run(["gcloud", ...])</code> calls with <code style="color:var(--green-main);font-size:0.9em">google.cloud.compute_v1</code> and <code style="color:var(--green-main);font-size:0.9em">google.cloud.recommender_v1</code> SDK clients. Each function now uses the Python SDK with ADC authentication.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Updated requirements.txt</h4>
+        <p>Added two new packages: <code style="color:var(--green-main);font-size:0.9em">google-cloud-compute</code> and <code style="color:var(--green-main);font-size:0.9em">google-cloud-recommender</code>. These are the official Google Cloud Python client libraries that handle auth, retries, and API calls cleanly.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Committed and Redeployed Both Services</h4>
+        <p>Pushed to GitHub, then <code style="color:var(--green-main);font-size:0.9em">gcloud run deploy</code> for both <strong>greenops-dashboard</strong> and <strong>greenops-agent</strong>. Revisions <code style="color:var(--green-main);font-size:0.9em">greenops-dashboard-00010-kkt</code> and <code style="color:var(--green-main);font-size:0.9em">greenops-agent-00004-v2p</code> deployed successfully.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- The Win -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Result</div>
+    <h2>All 4 Agents Running — Pipeline Complete</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    After fixing all three issues, we clicked <strong>Run Real GCP</strong> on the live dashboard.
+    The 4-agent pipeline ran end-to-end for the first time against a real GCP project.
+    Here's what the dashboard showed:
+  </p>
+
+  <div class="success-banner">
+    <h3>🌱 Pipeline Complete</h3>
+    <p>All 4 agents executed successfully on project budget-finance-mcp — 06:23:36 UTC, 27 May 2026</p>
+    <div class="agents-complete">
+      <div class="ac-item">
+        <div class="ac-icon">🛰️</div>
+        <div class="ac-name">Carbon Scout</div>
+        <div class="ac-status">✓ Done</div>
+      </div>
+      <div class="ac-item">
+        <div class="ac-icon">🧠</div>
+        <div class="ac-name">GreenOps Analyzer</div>
+        <div class="ac-status">✓ Done</div>
+      </div>
+      <div class="ac-item">
+        <div class="ac-icon">⚙️</div>
+        <div class="ac-name">Optimization Executor</div>
+        <div class="ac-status">✓ Done</div>
+      </div>
+      <div class="ac-item">
+        <div class="ac-icon">📋</div>
+        <div class="ac-name">Report Generator</div>
+        <div class="ac-status">✓ Done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+<span class="key">pipeline</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="ok">complete</span><br>
+<span class="key">mode</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">real GCP</span><br>
+<span class="key">project</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">budget-finance-mcp</span><br>
+<span class="key">idle_vms</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">0  (project is clean)</span><br>
+<span class="key">unattached_disks</span><span class="val">:</span> <span class="val">0</span><br>
+<span class="key">unused_ips</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">0</span><br>
+<span class="key">monthly_savings</span><span class="val">:</span> <span class="val">$0.00</span><br>
+<span class="key">co2_saved</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="val">:</span> <span class="val">0.00 kg</span><br>
+<span class="key">agents_status</span>&nbsp;<span class="val">:</span> <span class="check">All 4 ✓ Done</span>
+  </div>
+
+  <p class="narration">
+    Zero waste found means the project is currently clean — that's a good result.
+    The real value is that next time something wasteful appears (an idle VM, an orphaned disk),
+    the pipeline will catch it, analyze it, and notify you within the hour.
+    <em>That's what this system was built to do.</em>
+  </p>
+
+  <!-- Maintenance guide -->
+  <div class="chapter" style="margin-top:60px">
+    <div class="chapter-num">Stage 3 — Maintenance</div>
+    <h2>What You'll Need to Maintain</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <p class="narration">
+    Almost everything is set-and-forget. There's only one thing that occasionally needs attention.
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num" style="background:rgba(249,115,22,0.1);border-color:rgba(249,115,22,0.35);color:#c2410c">⚠️</div>
+      <div class="step-body">
+        <h4>Gemini API Key — Only Thing That Expires</h4>
+        <p>The free AI Studio key has a daily quota (1,500 requests/day). If you ever see <code style="color:#b91c1c;font-size:0.9em">RESOURCE_EXHAUSTED</code> again: go to <strong>aistudio.google.com/app/apikey</strong>, create a new key in a new project, then run:<br>
+        <code style="color:var(--green-main);font-size:0.85em;display:block;margin-top:8px">gcloud run services update greenops-dashboard --region us-central1 --update-env-vars "GOOGLE_API_KEY=NEW_KEY"</code>
+        <code style="color:var(--green-main);font-size:0.85em;display:block;margin-top:4px">gcloud run services update greenops-agent --region us-central1 --update-env-vars "GOOGLE_API_KEY=NEW_KEY"</code>
+        Also update your <code style="color:var(--green-main);font-size:0.85em">.env</code> file for the scheduler.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#16a34a">✓</div>
+      <div class="step-body">
+        <h4>Cloud Run Services — No Expiry</h4>
+        <p>Both <strong>greenops-dashboard</strong> and <strong>greenops-agent</strong> run forever. Free tier is 2 million requests/month. Scales to zero when idle.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#16a34a">✓</div>
+      <div class="step-body">
+        <h4>Cloud Scheduler — No Expiry</h4>
+        <p>The <strong>greenops-hourly-scan</strong> job fires every hour indefinitely. Gmail + Slack notifications keep working. Nothing to maintain.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num" style="background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#16a34a">✓</div>
+      <div class="step-body">
+        <h4>GCP Auth (ADC) — No Expiry</h4>
+        <p>Cloud Run uses its attached service account for all GCP API calls. Service accounts don't expire. The Python SDK picks this up automatically — no JSON keys, no gcloud commands needed in production.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- What happens every hour -->
+  <div class="chapter">
+    <div class="chapter-num">Ongoing</div>
+    <h2>What Happens Every Hour, Forever</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot">🕐</div>
+      <div class="tl-body">
+        <h4>:00 — Cloud Scheduler fires</h4>
+        <p>At the top of every hour, GCP Cloud Scheduler sends a POST request with your secret header to <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">/scheduled-scan</code>.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🛰️</div>
+      <div class="tl-body">
+        <h4>:00:05 — GCP scan runs (Python SDK)</h4>
+        <p>Carbon Scout calls <code style="color:var(--green-main);font-family:'JetBrains Mono',monospace;font-size:0.9em">google.cloud.compute_v1</code> via ADC — lists all VMs, disks, and IPs in your project and checks utilization. No gcloud CLI needed.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">🧠</div>
+      <div class="tl-body">
+        <h4>:00:15 — Gemini analysis runs</h4>
+        <p>GreenOps Analyzer calculates monthly cost of each wasteful resource + CO₂ equivalent. Optimization Executor proposes LOW-risk actions and awaits human approval.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">📧</div>
+      <div class="tl-body">
+        <h4>:00:20 — Gmail alert sent</h4>
+        <p>HTML email arrives in your inbox with findings table, savings estimate, and timestamp. Always sent — even if findings = 0.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot">💬</div>
+      <div class="tl-body">
+        <h4>:00:22 — Slack message posted</h4>
+        <p>Block Kit formatted message in #greenops-alerts with emoji, stats, and resource names if any waste found.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Status -->
+  <div class="final-status">
+    <h3>🌿 GreenOps — Fully Live</h3>
+    <p>All three stages complete. Zero maintenance required. Your GCP project is monitored, analyzed, and reported every hour.</p>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="s-icon">🚀</div>
+        <h5>Cloud Run</h5>
+        <p>Serverless. Scales to zero. Always available.</p>
+      </div>
+      <div class="status-item">
+        <div class="s-icon">⏱️</div>
+        <h5>Cloud Scheduler</h5>
+        <p>Fires every hour. State: ENABLED.</p>
+      </div>
+      <div class="status-item">
+        <div class="s-icon">📬</div>
+        <h5>Dual Alerts</h5>
+        <p>Gmail + Slack. Always-on. No silence.</p>
+      </div>
+      <div class="status-item">
+        <div class="s-icon">🤖</div>
+        <h5>4 AI Agents</h5>
+        <p>Scout → Analyzer → Executor → Reporter.</p>
+      </div>
+      <div class="status-item">
+        <div class="s-icon">🔐</div>
+        <h5>Python SDK Auth</h5>
+        <p>ADC via service account. No CLI needed.</p>
+      </div>
+      <div class="status-item">
+        <div class="s-icon">🌱</div>
+        <h5>Carbon Tracking</h5>
+        <p>CO₂ calculated per resource, per month.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Files on GitHub -->
+  <div class="chapter">
+    <div class="chapter-num">Reference</div>
+    <h2>Files on GitHub</h2>
+    <div class="chapter-line"></div>
+  </div>
+
+  <div class="files-grid">
+    <div class="file-row">
+      <div class="file-icon">⚡</div>
+      <div class="file-body">
+        <h4>app.py</h4>
+        <p>FastAPI application. Live SSE streaming dashboard. /run/{mode} triggers pipeline. /scheduled-scan POST with auth header. All 4-agent events streamed to browser in real-time.</p>
+      </div>
+    </div>
+    <div class="file-row">
+      <div class="file-icon">🕐</div>
+      <div class="file-body">
+        <h4>scheduler.py</h4>
+        <p>Standalone notification engine. run_scan(), send_email(), send_slack(), run_scheduled_scan(). Called by /scheduled-scan every hour via Cloud Scheduler.</p>
+      </div>
+    </div>
+    <div class="file-row">
+      <div class="file-icon">🛰️</div>
+      <div class="file-body">
+        <h4>tools/gcp_tools.py</h4>
+        <p>GCP resource scanning via Python SDK (not gcloud CLI). Uses google-cloud-compute + google-cloud-recommender with ADC. Works in Cloud Run without any CLI installation.</p>
+      </div>
+    </div>
+    <div class="file-row">
+      <div class="file-icon">🤖</div>
+      <div class="file-body">
+        <h4>agents/greenops_pipeline.py</h4>
+        <p>4-agent sequential pipeline definition. Carbon Scout → GreenOps Analyzer → Optimization Executor → Report Generator. All using Gemini via Google ADK.</p>
+      </div>
+    </div>
+    <div class="file-row">
+      <div class="file-icon">📦</div>
+      <div class="file-body">
+        <h4>requirements.txt</h4>
+        <p>fastapi, uvicorn[standard], python-dotenv, google-adk, google-genai, requests, <strong>google-cloud-compute</strong>, <strong>google-cloud-recommender</strong>. Last two added in Stage 3 to replace gcloud CLI calls.</p>
+      </div>
+    </div>
+    <div class="file-row">
+      <div class="file-icon">🔒</div>
+      <div class="file-body">
+        <h4>.env (NOT on GitHub)</h4>
+        <p>All 11 environment variables including API keys, Gmail credentials, Slack webhook URL, and scheduler secret. Listed in .gitignore. Credentials set via Cloud Run env vars in production.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<footer class="footer">
+  <p>Built by <strong>Raghu</strong> · GreenOps Agent · May 2026</p>
+  <p style="margin-top:8px;color:var(--text-dim)">
+    GCP Project: budget-finance-mcp ·
+    Cloud Run: us-central1 ·
+    Schedule: 0 * * * * America/Chicago ·
+    Stack: Google ADK + Gemini + FastAPI + Cloud Run
+  </p>
+</footer>
+
+</body>
+</html>
