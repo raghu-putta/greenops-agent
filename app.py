@@ -1068,3 +1068,25 @@ $megaPanel = @'
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return DASHBOARD
+
+
+@app.post("/test-connection")
+async def test_connection(request: Request):
+    try:
+        api_key    = request.get("apiKey", "")
+        project_id = request.get("projectId", "")
+        if not api_key or not project_id:
+            return JSONResponse({"success": False, "error": "Missing API key or Project ID"})
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-2.5-pro")
+        model.generate_content("ping", generation_config={"max_output_tokens": 5})
+        return JSONResponse({"success": True, "message": "Connected successfully!"})
+    except Exception as e:
+        err = str(e)
+        if "API_KEY_INVALID" in err or "invalid" in err.lower():
+            return JSONResponse({"success": False, "error": "Invalid Gemini API key"})
+        elif "quota" in err.lower():
+            return JSONResponse({"success": False, "error": "API quota exceeded"})
+        else:
+            return JSONResponse({"success": False, "error": err[:120]})
