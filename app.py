@@ -384,7 +384,7 @@ DASHBOARD = """<!DOCTYPE html>
       <div class="sb-title">Run Pipeline</div>
       <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">🧪 Run Demo Mode</button>
       <button class="btn btn-real" id="btn-real" onclick="run('real')">☁️ Run Real GCP</button>
-      <button class="btn-settings" onclick="toggleSettings()">?? Configure GCP</button>
+      <button class="btn-settings" onclick="document.getElementById(`"settings-panel`").style.display=`"block`";loadSettings();">[&#9965;] Configure GCP</button>
       <div class="model-pill">✨ Model: <b>gemini-2.5-pro</b></div>
     </div>
 
@@ -704,6 +704,55 @@ DASHBOARD = """<!DOCTYPE html>
   })();
         function toggleSettings(){const p=document.getElementById('settings-panel');p.style.display=p.style.display==='block'?'none':'block';if(p.style.display==='block')loadSettings();} function saveSettings(){const s={apiKey:document.getElementById('cfg-api-key').value,projectId:document.getElementById('cfg-project-id').value,region:document.getElementById('cfg-region').value,zone:document.getElementById('cfg-zone').value};sessionStorage.setItem('gops',JSON.stringify(s));const btn=document.querySelector('.btn-save');if(btn){btn.textContent='Saved!';setTimeout(()=>{btn.textContent='Save and Close';},1500);}} function loadSettings(){const s=JSON.parse(sessionStorage.getItem('gops')||'{}');if(s.apiKey)document.getElementById('cfg-api-key').value=s.apiKey;if(s.projectId)document.getElementById('cfg-project-id').value=s.projectId;if(s.region)document.getElementById('cfg-region').value=s.region;if(s.zone)document.getElementById('cfg-zone').value=s.zone;} function getSettings(){return JSON.parse(sessionStorage.getItem('gops')||'{}');} function testConn(){const el=document.getElementById('conn-status');el.style.display='block';el.className='conn-status';el.textContent='Testing...';const s=getSettings();if(!s.projectId||!s.apiKey){el.className='conn-status err';el.textContent='Fill in all fields first';return;}fetch('/test-connection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)}).then(r=>r.json()).then(d=>{el.className=d.success?'conn-status ok':'conn-status err';el.textContent=d.success?'Connected! Ready to scan.':'Error: '+(d.error||'Failed');}).catch(()=>{el.className='conn-status err';el.textContent='Server unreachable';});} window.addEventListener('load',loadSettings);
 </script>
+
+  <!-- Settings Panel HTML -->
+  <div id="settings-panel" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:none;background:rgba(0,0,0,0.8);" onclick="if(event.target===this)this.style.display='none'">
+    <div style="position:absolute;right:0;top:0;width:420px;height:100%;background:#0d1117;border-left:2px solid #34d399;overflow-y:auto;padding:0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #21262d;background:#010409;">
+        <h2 style="color:#34d399;margin:0;font-size:1.1rem;">&#9965; Configure GCP</h2>
+        <button onclick="document.getElementById('settings-panel').style.display='none'" style="background:none;border:1px solid #444;color:#999;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:1rem;">X</button>
+      </div>
+      <div style="padding:22px 24px;">
+        <p style="color:#8b949e;font-size:0.82rem;margin-bottom:22px;line-height:1.6;padding:12px;background:#161b22;border-radius:8px;border:1px solid #21262d;">Enter your Google Cloud details to scan your real GCP project for waste and carbon footprint.</p>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">Gemini API Key</label>
+          <input type="password" id="cfg-api-key" placeholder="AIzaSy..." autocomplete="off" style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px 12px;border-radius:8px;font-size:0.88rem;box-sizing:border-box;"/>
+          <small style="display:block;color:#6e7681;font-size:0.72rem;margin-top:4px;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">GCP Project ID</label>
+          <input type="text" id="cfg-project-id" placeholder="my-project-123" style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px 12px;border-radius:8px;font-size:0.88rem;box-sizing:border-box;"/>
+          <small style="display:block;color:#6e7681;font-size:0.72rem;margin-top:4px;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">GCP Region</label>
+          <select id="cfg-region" style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px 12px;border-radius:8px;font-size:0.88rem;box-sizing:border-box;">
+            <option value="us-central1">us-central1 (Iowa)</option>
+            <option value="us-east1">us-east1 (South Carolina)</option>
+            <option value="us-west1">us-west1 (Oregon)</option>
+            <option value="europe-west1">europe-west1 (Belgium)</option>
+            <option value="europe-west2">europe-west2 (London)</option>
+            <option value="asia-east1">asia-east1 (Taiwan)</option>
+            <option value="asia-south1">asia-south1 (Mumbai)</option>
+            <option value="australia-southeast1">australia-southeast1 (Sydney)</option>
+          </select>
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">GCP Zone</label>
+          <input type="text" id="cfg-zone" placeholder="us-central1-a" style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px 12px;border-radius:8px;font-size:0.88rem;box-sizing:border-box;"/>
+          <small style="display:block;color:#6e7681;font-size:0.72rem;margin-top:4px;">Usually your region + "-a"</small>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:26px;">
+          <button onclick="saveSettings();document.getElementById('settings-panel').style.display='none';" style="flex:1;background:#34d399;color:#0a1a0f;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.88rem;">Save and Close</button>
+          <button onclick="testConn()" style="flex:1;background:transparent;color:#34d399;border:1px solid #34d399;padding:12px;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.88rem;">Test Connection</button>
+        </div>
+        <div id="conn-status" style="margin-top:14px;padding:12px;border-radius:8px;font-size:0.82rem;text-align:center;display:none;"></div>
+        <div style="margin-top:26px;padding:14px;background:#161b22;border-radius:8px;border:1px solid #21262d;">
+          <p style="color:#484f58;font-size:0.72rem;text-align:center;margin:0;line-height:1.7;">Stored in browser session only. Never sent to our servers.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>"""
 
