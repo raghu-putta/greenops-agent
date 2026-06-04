@@ -24,7 +24,7 @@ if api_key:
 
 app = FastAPI(title="GreenOps AI Dashboard")
 
-# â”€â”€ Global state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Global state â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 pipeline_status = {"running": False, "complete": False}
 _sse_queues: list = []
 
@@ -39,7 +39,7 @@ async def _broadcast(data: dict):
             pass
 
 
-# â”€â”€ Rate-limit helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Rate-limit helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 MAX_RETRIES = 5
 
 # Exponential backoff delays for 503 errors (seconds): 20, 40, 80, 120, 180
@@ -64,8 +64,8 @@ def _is_retryable_error(e: Exception) -> bool:
 def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     """
     Exponential backoff for retries.
-    503 UNAVAILABLE â†’ exponential: 20s, 40s, 80s, 120s, 180s
-    429 RESOURCE_EXHAUSTED â†’ extracts retryDelay from payload or defaults to 65s.
+    503 UNAVAILABLE â†' exponential: 20s, 40s, 80s, 120s, 180s
+    429 RESOURCE_EXHAUSTED â†' extracts retryDelay from payload or defaults to 65s.
     """
     msg = str(e)
     # Always honour explicit retryDelay from API payload
@@ -78,7 +78,7 @@ def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     return 65  # safe default for 429 quota window
 
 
-# â”€â”€ Pipeline runner (with auto-retry on 429) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Pipeline runner (with auto-retry on 429) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
@@ -133,7 +133,7 @@ async def run_pipeline(mode: str):
                                 "time": datetime.now().strftime("%H:%M:%S")
                             })
 
-            # â”€â”€ Success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # â"€â"€ Success â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
             await _broadcast({"type": "done", "time": datetime.now().strftime("%H:%M:%S")})
             break  # exit retry loop on success
 
@@ -146,7 +146,7 @@ async def run_pipeline(mode: str):
                 else:
                     label = (
                         f"â³ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
-                        f"Auto-retrying in {wait}s â€” this is normal on the free plan."
+                        f"Auto-retrying in {wait}s â€" this is normal on the free plan."
                     )
                 await _broadcast({
                     "type": "retry",
@@ -156,16 +156,16 @@ async def run_pipeline(mode: str):
                     "time": datetime.now().strftime("%H:%M:%S"),
                     "message": label
                 })
-                logger.warning("Retryable error on attempt %d/%d â€” waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
+                logger.warning("Retryable error on attempt %d/%d â€" waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
                 await asyncio.sleep(wait)
-                # continue â†’ next attempt
+                # continue â†' next attempt
             else:
                 # Non-retryable error, or exhausted all retries
                 if _is_retryable_error(e):
                     friendly = (
                         "ðŸš« Pipeline failed after 3 retries.\n\n"
-                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded â€” try again in 30s.\n"
-                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit â€” wait ~1 min or enable billing."
+                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded â€" try again in 30s.\n"
+                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit â€" wait ~1 min or enable billing."
                     )
                     await _broadcast({"type": "error", "message": friendly})
                 else:
@@ -175,10 +175,10 @@ async def run_pipeline(mode: str):
     pipeline_status = {"running": False, "complete": True}
 
 
-# â”€â”€ API endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ API endpoints â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 @app.get("/stream")
 async def stream():
-    """SSE endpoint â€” browser connects here to receive live events."""
+    """SSE endpoint â€" browser connects here to receive live events."""
     q: asyncio.Queue = asyncio.Queue()
     _sse_queues.append(q)
 
@@ -219,7 +219,7 @@ async def status():
 async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
     """
     Cloud Scheduler calls this endpoint every hour.
-    Protected by X-Scheduler-Secret header â€” set SCHEDULER_SECRET env var.
+    Protected by X-Scheduler-Secret header â€" set SCHEDULER_SECRET env var.
     Runs a full GCP resource scan and sends results to Gmail + Slack.
     """
     expected = os.getenv("SCHEDULER_SECRET", "")
@@ -239,18 +239,18 @@ async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
-# â”€â”€ Dashboard HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Dashboard HTML â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 DASHBOARD = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ðŸŒ± GreenOps AI Dashboard</title>
+<title>&#127793; GreenOps AI Dashboard</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-  /* â”€â”€ Header â”€â”€ */
+  /* â"€â"€ Header â"€â"€ */
   .header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   .logo{font-size:1.25rem;font-weight:700;color:#58a6ff;display:flex;align-items:center;gap:8px}
   .logo-green{color:#3fb950}
@@ -261,7 +261,7 @@ DASHBOARD = """<!DOCTYPE html>
   .dot.done{background:#3fb950}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
-  /* â”€â”€ Agent cards â”€â”€ */
+  /* â"€â"€ Agent cards â"€â"€ */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
   .acard{background:#161b22;padding:16px 20px;display:flex;flex-direction:column;gap:5px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
@@ -273,10 +273,10 @@ DASHBOARD = """<!DOCTYPE html>
   .acard-status.running{color:#f0883e}
   .acard-status.done{color:#3fb950}
 
-  /* â”€â”€ Main area â”€â”€ */
+  /* â"€â"€ Main area â"€â"€ */
   .main{display:grid;grid-template-columns:1fr 300px;flex:1;overflow:hidden;min-height:0}
 
-  /* â”€â”€ Terminal â”€â”€ */
+  /* â"€â"€ Terminal â"€â"€ */
   .terminal{background:#0d1117;padding:18px 22px;overflow-y:auto;font-family:'Consolas','JetBrains Mono','Courier New',monospace;font-size:.8rem;line-height:1.65}
   .terminal::-webkit-scrollbar{width:5px}
   .terminal::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -291,7 +291,7 @@ DASHBOARD = """<!DOCTYPE html>
   .t-text{color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
   .t-error{color:#f85149}
 
-  /* â”€â”€ Sidebar â”€â”€ */
+  /* â"€â"€ Sidebar â"€â"€ */
   .sidebar{background:#161b22;border-left:1px solid #21262d;display:flex;flex-direction:column;overflow-y:auto}
   .sidebar::-webkit-scrollbar{width:5px}
   .sidebar::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -330,9 +330,9 @@ DASHBOARD = """<!DOCTYPE html>
 </head>
 <body>
 
-<!-- â”€â”€ Header â”€â”€ -->
+<!-- â"€â"€ Header â"€â"€ -->
 <div class="header">
-  <div class="logo">ðŸŒ± GreenOps <span class="logo-green">AI Dashboard</span></div>
+  <div class="logo">&#127793; GreenOps <span class="logo-green">AI Dashboard</span></div>
   <div class="header-right">
     <div class="status-badge">
       <div class="dot" id="dot"></div>
@@ -341,16 +341,16 @@ DASHBOARD = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- â”€â”€ Agent cards â”€â”€ -->
+<!-- â"€â"€ Agent cards â"€â"€ -->
 <div class="agents-strip">
   <div class="acard" id="card-carbon_scout">
-    <div class="acard-icon">ðŸ”</div>
+    <div class="acard-icon">ðŸ"</div>
     <div class="acard-num">Agent 1</div>
     <div class="acard-name">Carbon Scout</div>
     <div class="acard-status" id="cs-status">Waiting</div>
   </div>
   <div class="acard" id="card-greenops_analyzer">
-    <div class="acard-icon">ðŸ“Š</div>
+    <div class="acard-icon">ðŸ"Š</div>
     <div class="acard-num">Agent 2</div>
     <div class="acard-name">GreenOps Analyzer</div>
     <div class="acard-status" id="ga-status">Waiting</div>
@@ -362,14 +362,14 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="acard-status" id="oe-status">Waiting</div>
   </div>
   <div class="acard" id="card-report_generator">
-    <div class="acard-icon">ðŸ“‹</div>
+    <div class="acard-icon">ðŸ"‹</div>
     <div class="acard-num">Agent 4</div>
     <div class="acard-name">Report Generator</div>
     <div class="acard-status" id="rg-status">Waiting</div>
   </div>
 </div>
 
-<!-- â”€â”€ Main â”€â”€ -->
+<!-- â"€â"€ Main â"€â"€ -->
 <div class="main">
 
   <!-- Terminal -->
@@ -377,7 +377,7 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="welcome" style="padding:0;position:relative;overflow:hidden;border-radius:8px">
       <canvas id="bgcanvas" style="width:100%;display:block;border-radius:8px;max-height:340px"></canvas>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;background:linear-gradient(transparent,rgba(2,14,8,0.95));text-align:center">
-        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">ðŸŒ± Welcome to GreenOps AI Dashboard</h2>
+        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">&#127793; Welcome to GreenOps AI Dashboard</h2>
         <p style="font-size:0.78rem;color:#6ee7b7">Click <strong style="color:#3fb950">Run Demo</strong> to scan a simulated GCP project or <strong style="color:#58a6ff">Run Real GCP</strong> to scan your actual cloud.</p>
         <div style="font-size:0.7rem;color:#34d399;margin-top:6px;opacity:0.7">Powered by Google ADK + Gemini 2.5 Pro âœ¨</div>
       </div>
@@ -398,30 +398,30 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="sb-section">
       <div class="sb-title">Live Metrics</div>
       <div class="metric">
-        <div class="metric-icon">ðŸ’°</div>
+        <div class="metric-icon">ðŸ'°</div>
         <div>
-          <div class="metric-val" id="m-cost">â€”</div>
+          <div class="metric-val" id="m-cost">â€"</div>
           <div class="metric-lbl">Monthly savings</div>
         </div>
       </div>
       <div class="metric">
         <div class="metric-icon">ðŸŒ¿</div>
         <div>
-          <div class="metric-val" id="m-co2">â€”</div>
+          <div class="metric-val" id="m-co2">â€"</div>
           <div class="metric-lbl">COâ‚‚ saved / month</div>
         </div>
       </div>
       <div class="metric">
-        <div class="metric-icon">ðŸ–¥ï¸</div>
+        <div class="metric-icon">ðŸ-¥ï¸</div>
         <div>
-          <div class="metric-val" id="m-vms">â€”</div>
+          <div class="metric-val" id="m-vms">â€"</div>
           <div class="metric-lbl">Idle VMs found</div>
         </div>
       </div>
       <div class="metric">
         <div class="metric-icon">âœ…</div>
         <div>
-          <div class="metric-val" id="m-actions">â€”</div>
+          <div class="metric-val" id="m-actions">â€"</div>
           <div class="metric-lbl">LOW risk actions</div>
         </div>
       </div>
@@ -437,7 +437,7 @@ DASHBOARD = """<!DOCTYPE html>
 
     <div class="sb-links">
       <a class="sb-link" href="https://github.com/raghu-putta/greenops-agent" target="_blank">â­ View on GitHub</a>
-      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">ðŸ“– Google ADK Docs</a>
+      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">ðŸ"- Google ADK Docs</a>
     </div>
 
   </div>
@@ -455,7 +455,7 @@ DASHBOARD = """<!DOCTYPE html>
   let activeAgent = null;
   let es = null;
 
-  // â”€â”€ SSE connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ SSE connection â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function connect() {
     es = new EventSource('/stream');
     es.onmessage = onEvent;
@@ -469,8 +469,8 @@ DASHBOARD = """<!DOCTYPE html>
       clearTerminal(); resetCards();
       setBtns(true);
       setStatus('running', `Running ${d.mode === 'demo' ? 'ðŸ§ª Demo' : 'â˜ï¸ Real GCP'} pipeline...`);
-      print(`<div class="t-timestamp">[${d.time}]  Pipeline started â€” ${d.mode} mode</div>`);
-      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
+      print(`<div class="t-timestamp">[${d.time}]  Pipeline started â€" ${d.mode} mode</div>`);
+      print(`<div class="t-separator">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
       activeAgent = null;
     }
 
@@ -496,13 +496,13 @@ DASHBOARD = """<!DOCTYPE html>
       activeAgent = null;
       setStatus('done', 'âœ… Pipeline complete');
       setBtns(false);
-      print(`<div class="t-separator" style="margin-top:12px">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
-      print(`<div class="t-timestamp">[${d.time}]  âœ… Done â€” full report saved to output/</div>`);
+      print(`<div class="t-separator" style="margin-top:12px">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
+      print(`<div class="t-timestamp">[${d.time}]  âœ… Done â€" full report saved to output/</div>`);
     }
 
     else if (d.type === 'retry') {
-      setStatus('running', `â³ Rate limit â€” retrying in ${d.wait}s (${d.attempt}/${d.max})â€¦`);
-      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
+      setStatus('running', `â³ Rate limit â€" retrying in ${d.wait}s (${d.attempt}/${d.max})â€¦`);
+      print(`<div class="t-separator">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
       print(`<div class="t-error" style="color:#f0883e">${esc(d.message)}</div>`);
       // Live countdown
       let remaining = d.wait;
@@ -525,7 +525,7 @@ DASHBOARD = """<!DOCTYPE html>
     }
   }
 
-  // â”€â”€ Run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Run â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function run(mode) {
     fetch(`/run/${mode}`, {method:'POST'})
       .then(r => r.json())
@@ -533,7 +533,7 @@ DASHBOARD = """<!DOCTYPE html>
       .catch(err => alert('Could not start pipeline: ' + err));
   }
 
-  // â”€â”€ Terminal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Terminal helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function clearTerminal() {
     document.getElementById('terminal').innerHTML = '';
   }
@@ -548,7 +548,7 @@ DASHBOARD = """<!DOCTYPE html>
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
   }
 
-  // â”€â”€ Card helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Card helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function resetCards() {
     Object.values(AGENTS).forEach(a => {
       const c = document.getElementById('card-' + a.id);
@@ -557,7 +557,7 @@ DASHBOARD = """<!DOCTYPE html>
       if (s) { s.className = 'acard-status'; s.textContent = 'Waiting'; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
-      document.getElementById(id).textContent = 'â€”';
+      document.getElementById(id).textContent = 'â€"';
     });
   }
   function markActive(key) {
@@ -572,22 +572,22 @@ DASHBOARD = """<!DOCTYPE html>
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard done';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = 'âœ“ Done'; }
+    if (s) { s.className = 'acard-status done'; s.textContent = 'âœ" Done'; }
   }
 
-  // â”€â”€ Status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Status bar â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function setStatus(state, text) {
     document.getElementById('dot').className = 'dot ' + state;
     document.getElementById('status-txt').textContent = text;
   }
 
-  // â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Buttons â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function setBtns(disabled) {
     document.getElementById('btn-demo').disabled = disabled;
     document.getElementById('btn-real').disabled = disabled;
   }
 
-  // â”€â”€ Metric extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Metric extraction â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function extractMetrics(text) {
     // Cost
     const cm = text.match(/TOTAL.*?\\$([\\d,.]+)/i) || text.match(/\\$([\\d,.]+).*?month/i);
@@ -608,7 +608,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   connect();
 
-  // â”€â”€ Cinematic GreenOps Universe Background â”€â”€
+  // â"€â"€ Cinematic GreenOps Universe Background â"€â"€
   (function(){
     const c=document.getElementById('bgcanvas');
     if(!c)return;
