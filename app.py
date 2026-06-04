@@ -384,6 +384,7 @@ DASHBOARD = """<!DOCTYPE html>
       <div class="sb-title">Run Pipeline</div>
       <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">🧪 Run Demo Mode</button>
       <button class="btn btn-real" id="btn-real" onclick="run('real')">☁️ Run Real GCP</button>
+      <button class="btn-settings" onclick="toggleSettings()">?? Configure GCP</button>
       <div class="model-pill">✨ Model: <b>gemini-2.5-pro</b></div>
     </div>
 
