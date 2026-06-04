@@ -1,7 +1,29 @@
-<p align='center'>
-  <img src='./greenops-icon-3d.gif' width='200' alt='GreenOps AI'/>
+<p align="center">
+  <img src="./greenops-icon-3d.gif" width="150" alt="GreenOps AI"/>
 </p>
 
+<h1 align="center">GreenOps AI Agent</h1>
+
+<p align="center">
+  <b>4-agent AI pipeline that scans GCP for wasted resources, calculates carbon footprint,<br/>
+  and safely optimizes with human approval � built with Google ADK + Gemini 2.5 Pro</b>
+</p>
+
+<p align="center">
+  <a href="https://deploy.cloud.run/?git_repo=https://github.com/raghu-putta/greenops-agent">
+    <img src="https://deploy.cloud.run/button.svg" alt="Run on Google Cloud" height="36"/>
+  </a>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Model-Gemini%202.5%20Pro-4285F4?logo=google&logoColor=white"/>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Built%20with-Google%20ADK-34A853?logo=google-cloud&logoColor=white"/>
+  &nbsp;
+  <img src="https://img.shields.io/badge/Deployed%20on-Cloud%20Run-EA4335?logo=google-cloud&logoColor=white"/>
+  &nbsp;
+  <img src="https://img.shields.io/badge/License-MIT-yellow"/>
+</p>
+
+---
 # 🌱 GreenOps AI Agent
 
 **A 4-agent AI pipeline that scans Google Cloud projects for wasted resources, calculates carbon footprint, and executes safe optimizations — built with Google ADK and Gemini.**
@@ -372,3 +394,27 @@ Built by **Raghu Putta** using Google ADK + Gemini 2.5 Pro.
 ## License
 
 MIT License — free to use, modify, and distribute.
+
+---
+
+## Deploy Your Own Instance
+
+### Option A - One-Click Deploy
+Click the Run on Google Cloud button above.
+
+### Option B - Manual Deploy
+git clone https://github.com/raghu-putta/greenops-agent
+cd greenops-agent
+cp .env.example .env
+pip install -r requirements.txt
+python app.py
+
+### Option C - Settings Panel
+1. Open the live dashboard
+2. Click Configure GCP button
+3. Enter your GCP Project ID and Gemini API Key
+4. Click Test Connection
+5. Click Run Real GCP
+
+Get free Gemini API key: https://aistudio.google.com/apikey
+Find GCP Project ID: https://console.cloud.google.com
