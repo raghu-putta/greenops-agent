@@ -384,7 +384,7 @@ DASHBOARD = """<!DOCTYPE html>
       <div class="sb-title">Run Pipeline</div>
       <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">üß™ Run Demo Mode</button>
       <button class="btn btn-real" id="btn-real" onclick="run('real')">‚òÅÔ∏è Run Real GCP</button>
-      <button class="btn-settings" onclick="var p=document.getElementById('settings-panel');p.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;display:block;background:rgba(0,0,0,0.8);';loadSettings();">[GCP] Configure GCP</button>
+      <button class="btn-settings" id="open-settings-btn" onclick="openSettings()">&#9881; Configure GCP</button>
       <div class="model-pill">‚ú® Model: <b>gemini-2.5-pro</b></div>
     </div>
 
@@ -753,6 +753,314 @@ DASHBOARD = """<!DOCTYPE html>
       </div>
     </div>
   </div>
+
+  <div id="gcp-settings-overlay" onclick="if(event.target===this)closeSettings()" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;display:none;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);">
+    <div id="gcp-settings-drawer" style="position:absolute;right:0;top:0;width:460px;height:100%;background:#0d1117;border-left:2px solid #34d399;overflow-y:auto;font-family:'Segoe UI',system-ui,sans-serif;">
+
+      <div style="background:linear-gradient(135deg,#0a1628,#0d2818);border-bottom:1px solid #1e3a2a;padding:20px 24px 16px;position:sticky;top:0;z-index:10;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h2 style="color:#34d399;margin:0;font-size:1.1rem;font-weight:700;">&#9881; Configure GCP</h2>
+            <p style="color:#6e7681;font-size:0.72rem;margin:3px 0 0;">Set your cloud credentials</p>
+          </div>
+          <button onclick="closeSettings()" style="background:#1a1f2e;border:1px solid #30363d;color:#8b949e;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;">&#10005;</button>
+        </div>
+
+        <div style="background:#161b22;border-radius:10px;padding:10px;border:1px solid #21262d;">
+          <p style="color:#6e7681;font-size:0.7rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Choose Your AI Assistant</p>
+          <div style="display:flex;gap:6px;">
+            <button onclick="selectRobot('alex')" id="robot-alex" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a3a2a;border:2px solid #34d399;color:#34d399;font-size:0.7rem;font-weight:600;">??<br/>Alex</button>
+            <button onclick="selectRobot('aria')" id="robot-aria" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">?????<br/>Aria</button>
+            <button onclick="selectRobot('max')"  id="robot-max"  style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">?????<br/>Max</button>
+            <button onclick="selectRobot('nova')" id="robot-nova" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">??<br/>Nova</button>
+            <button onclick="selectRobot('eco')"  id="robot-eco"  style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">??<br/>Eco</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 24px 0;">
+        <div id="robot-bubble" style="background:linear-gradient(135deg,#161b22,#1a2332);border:1px solid #21262d;border-radius:16px 16px 16px 4px;padding:14px 16px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div id="robot-avatar" style="font-size:2rem;animation:robotBob 2s ease-in-out infinite;flex-shrink:0;">??</div>
+            <div>
+              <div id="robot-name" style="color:#34d399;font-size:0.72rem;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">ALEX</div>
+              <div id="robot-message" style="color:#c9d1d9;font-size:0.88rem;line-height:1.5;">Hey Techie! ?? I need your GCP details to get started scanning your cloud!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:20px 24px;">
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">?</span> Gemini API Key
+            <span style="color:#f85149;font-size:0.7rem;">*required</span>
+          </label>
+          <div style="position:relative;">
+            <input type="password" id="cfg-api-key" placeholder="AIzaSy..." autocomplete="off" oninput="onFieldInput()" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 44px 11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
+            <span onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#6e7681;font-size:1rem;">&#128065;</span>
+          </div>
+          <small style="color:#6e7681;font-size:0.72rem;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">&#9729;</span> GCP Project ID
+            <span style="color:#f85149;font-size:0.7rem;">*required</span>
+          </label>
+          <input type="text" id="cfg-project-id" placeholder="my-project-123" oninput="onFieldInput()" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
+          <small style="color:#6e7681;font-size:0.72rem;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">&#127758;</span> GCP Region
+          </label>
+          <select id="cfg-region" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;cursor:pointer;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'">
+            <option value="us-central1">&#127482;&#127480; us-central1 ó Iowa, USA</option>
+            <option value="us-east1">&#127482;&#127480; us-east1 ó South Carolina, USA</option>
+            <option value="us-west1">&#127482;&#127480; us-west1 ó Oregon, USA</option>
+            <option value="europe-west1">&#127466;&#127482; europe-west1 ó Belgium</option>
+            <option value="europe-west2">&#127468;&#127463; europe-west2 ó London, UK</option>
+            <option value="asia-east1">&#127481;&#127484; asia-east1 ó Taiwan</option>
+            <option value="asia-south1">&#127470;&#127475; asia-south1 ó Mumbai, India</option>
+            <option value="australia-southeast1">&#127462;&#127482; australia-southeast1 ó Sydney</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:24px;">
+
+cd "C:\Users\raghu\greenops-agent"
+
+$app = Get-Content "app.py" -Raw
+
+$app = $app -replace '<button class="btn-settings"[^>]*>.*?Configure GCP</button>', '<button class="btn-settings" id="open-settings-btn" onclick="openSettings()">&#9881; Configure GCP</button>'
+
+$megaPanel = @'
+
+  <div id="gcp-settings-overlay" onclick="if(event.target===this)closeSettings()" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;display:none;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);">
+    <div id="gcp-settings-drawer" style="position:absolute;right:0;top:0;width:460px;height:100%;background:#0d1117;border-left:2px solid #34d399;overflow-y:auto;font-family:'Segoe UI',system-ui,sans-serif;">
+
+      <div style="background:linear-gradient(135deg,#0a1628,#0d2818);border-bottom:1px solid #1e3a2a;padding:20px 24px 16px;position:sticky;top:0;z-index:10;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div>
+            <h2 style="color:#34d399;margin:0;font-size:1.1rem;font-weight:700;">&#9881; Configure GCP</h2>
+            <p style="color:#6e7681;font-size:0.72rem;margin:3px 0 0;">Set your cloud credentials</p>
+          </div>
+          <button onclick="closeSettings()" style="background:#1a1f2e;border:1px solid #30363d;color:#8b949e;width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;">&#10005;</button>
+        </div>
+
+        <div style="background:#161b22;border-radius:10px;padding:10px;border:1px solid #21262d;">
+          <p style="color:#6e7681;font-size:0.7rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Choose Your AI Assistant</p>
+          <div style="display:flex;gap:6px;">
+            <button onclick="selectRobot('alex')" id="robot-alex" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a3a2a;border:2px solid #34d399;color:#34d399;font-size:0.7rem;font-weight:600;">??<br/>Alex</button>
+            <button onclick="selectRobot('aria')" id="robot-aria" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">?????<br/>Aria</button>
+            <button onclick="selectRobot('max')"  id="robot-max"  style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">?????<br/>Max</button>
+            <button onclick="selectRobot('nova')" id="robot-nova" style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">??<br/>Nova</button>
+            <button onclick="selectRobot('eco')"  id="robot-eco"  style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;background:#1a1a2e;border:2px solid #30363d;color:#8b949e;font-size:0.7rem;font-weight:600;">??<br/>Eco</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 24px 0;">
+        <div id="robot-bubble" style="background:linear-gradient(135deg,#161b22,#1a2332);border:1px solid #21262d;border-radius:16px 16px 16px 4px;padding:14px 16px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div id="robot-avatar" style="font-size:2rem;animation:robotBob 2s ease-in-out infinite;flex-shrink:0;">??</div>
+            <div>
+              <div id="robot-name" style="color:#34d399;font-size:0.72rem;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">ALEX</div>
+              <div id="robot-message" style="color:#c9d1d9;font-size:0.88rem;line-height:1.5;">Hey Techie! ?? I need your GCP details to get started scanning your cloud!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:20px 24px;">
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">?</span> Gemini API Key
+            <span style="color:#f85149;font-size:0.7rem;">*required</span>
+          </label>
+          <div style="position:relative;">
+            <input type="password" id="cfg-api-key" placeholder="AIzaSy..." autocomplete="off" oninput="onFieldInput()" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 44px 11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
+            <span onclick="togglePwd()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#6e7681;font-size:1rem;">&#128065;</span>
+          </div>
+          <small style="color:#6e7681;font-size:0.72rem;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">&#9729;</span> GCP Project ID
+            <span style="color:#f85149;font-size:0.7rem;">*required</span>
+          </label>
+          <input type="text" id="cfg-project-id" placeholder="my-project-123" oninput="onFieldInput()" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
+          <small style="color:#6e7681;font-size:0.72rem;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">&#127758;</span> GCP Region
+          </label>
+          <select id="cfg-region" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;cursor:pointer;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'">
+            <option value="us-central1">&#127482;&#127480; us-central1 ó Iowa, USA</option>
+            <option value="us-east1">&#127482;&#127480; us-east1 ó South Carolina, USA</option>
+            <option value="us-west1">&#127482;&#127480; us-west1 ó Oregon, USA</option>
+            <option value="europe-west1">&#127466;&#127482; europe-west1 ó Belgium</option>
+            <option value="europe-west2">&#127468;&#127463; europe-west2 ó London, UK</option>
+            <option value="asia-east1">&#127481;&#127484; asia-east1 ó Taiwan</option>
+            <option value="asia-south1">&#127470;&#127475; asia-south1 ó Mumbai, India</option>
+            <option value="australia-southeast1">&#127462;&#127482; australia-southeast1 ó Sydney</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <label style="display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:0.82rem;font-weight:600;margin-bottom:8px;">
+            <span style="font-size:1.1rem;">&#128205;</span> GCP Zone
+          </label>
+          <input type="text" id="cfg-zone" placeholder="us-central1-a" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
+          <small style="color:#6e7681;font-size:0.72rem;">Usually region + "-a" e.g. us-central1-a</small>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <button onclick="saveCfg()" style="flex:1;background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;border:none;padding:13px;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">&#128190; Save &amp; Close</button>
+          <button onclick="testCfgConn()" style="flex:1;background:transparent;color:#34d399;border:1.5px solid #34d399;padding:13px;border-radius:10px;font-weight:600;cursor:pointer;font-size:0.9rem;">&#128269; Test Connection</button>
+        </div>
+
+        <div style="padding:12px 14px;background:#161b22;border-radius:10px;border:1px solid #21262d;text-align:center;">
+          <p style="color:#484f58;font-size:0.72rem;margin:0;line-height:1.7;">&#128274; Stored in browser session only.<br/>Never sent to our servers.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes robotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    @keyframes robotShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+    @keyframes robotSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    @keyframes drawerSlide{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes bubblePop{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+  </style>
+
+  <script>
+    const robots={
+      alex:{avatar:'??',name:'ALEX',color:'#34d399',greet:"Hey Techie! ?? I need your GCP details to get started!",missing:"Oops! ?? Some fields are empty. Fill them all in!",missingKey:"?? Hey! Don't forget your Gemini API Key!",missingProject:"?? Which GCP project should I scan? Add the Project ID!",testing:"? Hold tight! Testing your connection...",success:"?? All systems GO! Ready to scan your cloud!",fail:"?? Something's not right. Double-check your credentials!"},
+      aria:{avatar:'?????',name:'ARIA',color:'#f472b6',greet:"Hi there! ? Fill in your details and I'll find cloud waste!",missing:"Hey friend! ?? Some fields are still empty. Complete them!",missingKey:"? Your Gemini API Key is missing ó I can't work without it!",missingProject:"?? I need your GCP Project ID to get started!",testing:"?? Checking your connection... fingers crossed! ??",success:"?? Woohoo! Connected! Let's find that cloud waste together!",fail:"?? Connection didn't work. Check your credentials again!"},
+      max:{avatar:'?????',name:'MAX',color:'#60a5fa',greet:"Yo! Let's GO! ?? Drop your GCP credentials and let's roll!",missing:"Bro! ? You're missing fields! Fill them ALL in ó NOW!",missingKey:"?? API Key is MISSING! Can't run without fuel!",missingProject:"?? Project ID needed! Which GCP are we scanning?",testing:"?? TESTING CONNECTION... come on come on...!",success:"BOOM! ?? Connected and READY TO ROLL! Let's go!",fail:"?? Connection FAILED! Check credentials and retry!"},
+      nova:{avatar:'??',name:'NOVA',color:'#a78bfa',greet:"Greetings, Engineer. ?? Awaiting credentials to begin analysis.",missing:"?? Incomplete parameters. All fields are required.",missingKey:"?? Gemini API token not found. Credentials required.",missingProject:"?? Target project identifier missing. Specify Project ID.",testing:"?? Establishing secure connection to Google Cloud...",success:"? Authentication verified. Cloud scanning ready.",fail:"? Connection anomaly detected. Verify credentials."},
+      eco:{avatar:'??',name:'ECO',color:'#34d399',greet:"Hey! ?? Let's save the planet! Fill in your GCP details!",missing:"?? Almost there! A few fields need your attention!",missingKey:"?? Your API Key is missing ó need it for carbon calculations!",missingProject:"?? Which GCP project should I analyze for carbon waste?",testing:"?? Connecting... checking emissions data...",success:"?? Connected! Ready to calculate carbon footprint!",fail:"?? Connection failed. Let's fix credentials and try again!"}
+    };
+
+    let currentRobot='alex';
+
+    function openSettings(){
+      document.getElementById('gcp-settings-overlay').style.display='block';
+      document.getElementById('gcp-settings-drawer').style.animation='drawerSlide 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+      loadSettings();
+      setTimeout(()=>robotSay('greet'),400);
+    }
+
+    function closeSettings(){
+      document.getElementById('gcp-settings-overlay').style.display='none';
+    }
+
+    function selectRobot(id){
+      currentRobot=id;
+      ['alex','aria','max','nova','eco'].forEach(r=>{
+        const btn=document.getElementById('robot-'+r);
+        btn.style.background='#1a1a2e';btn.style.borderColor='#30363d';btn.style.color='#8b949e';
+      });
+      const rb=document.getElementById('robot-'+id);
+      const r=robots[id];
+      rb.style.background='#1a2a1a';rb.style.borderColor=r.color;rb.style.color=r.color;
+      document.getElementById('robot-avatar').textContent=r.avatar;
+      document.getElementById('robot-name').style.color=r.color;
+      document.getElementById('robot-name').textContent=r.name;
+      robotSay('greet');
+      sessionStorage.setItem('gops-robot',id);
+    }
+
+    function robotSay(type,custom){
+      const r=robots[currentRobot];
+      const msg=custom||r[type]||r.greet;
+      const el=document.getElementById('robot-message');
+      el.style.opacity='0';
+      setTimeout(()=>{el.textContent=msg;el.style.opacity='1';el.style.transition='opacity 0.3s';},400);
+      const av=document.getElementById('robot-avatar');
+      if(type==='missing'||type==='missingKey'||type==='missingProject'||type==='fail'){
+        av.style.animation='robotShake 0.5s ease, robotBob 2s ease-in-out 0.5s infinite';
+      } else if(type==='success'){
+        av.style.animation='robotSpin 0.6s ease, robotBob 2s ease-in-out 0.6s infinite';
+      } else {
+        av.style.animation='robotBob 2s ease-in-out infinite';
+      }
+    }
+
+    function onFieldInput(){
+      const key=document.getElementById('cfg-api-key').value;
+      const proj=document.getElementById('cfg-project-id').value;
+      if(!key&&!proj){robotSay('greet');return;}
+      if(!key){robotSay('missingKey');return;}
+      if(!proj){robotSay('missingProject');return;}
+      robotSay(null,"Looking good! ?? Hit 'Test Connection' or 'Save & Close' when ready!");
+    }
+
+    function saveCfg(){
+      const key=document.getElementById('cfg-api-key').value.trim();
+      const proj=document.getElementById('cfg-project-id').value.trim();
+      const region=document.getElementById('cfg-region').value;
+      const zone=document.getElementById('cfg-zone').value.trim()||region+'-a';
+      if(!key||!proj){
+        robotSay('missing');
+        if(!key){document.getElementById('cfg-api-key').style.borderColor='#f85149';}
+        if(!proj){document.getElementById('cfg-project-id').style.borderColor='#f85149';}
+        return;
+      }
+      sessionStorage.setItem('gops-cfg',JSON.stringify({apiKey:key,projectId:proj,region:region,zone:zone}));
+      robotSay('success');
+      setTimeout(()=>closeSettings(),1800);
+    }
+
+    function testCfgConn(){
+      const key=document.getElementById('cfg-api-key').value.trim();
+      const proj=document.getElementById('cfg-project-id').value.trim();
+      if(!key||!proj){
+        robotSay('missing');
+        if(!key)document.getElementById('cfg-api-key').style.borderColor='#f85149';
+        if(!proj)document.getElementById('cfg-project-id').style.borderColor='#f85149';
+        return;
+      }
+      robotSay('testing');
+      fetch('/test-connection',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({apiKey:key,projectId:proj,region:document.getElementById('cfg-region').value,zone:document.getElementById('cfg-zone').value})
+      }).then(r=>r.json()).then(d=>{
+        robotSay(d.success?'success':'fail');
+      }).catch(()=>robotSay('fail'));
+    }
+
+    function togglePwd(){
+      const i=document.getElementById('cfg-api-key');
+      i.type=i.type==='password'?'text':'password';
+    }
+
+    function loadSettings(){
+      try{
+        const s=JSON.parse(sessionStorage.getItem('gops-cfg')||'{}');
+        if(s.apiKey)document.getElementById('cfg-api-key').value=s.apiKey;
+        if(s.projectId)document.getElementById('cfg-project-id').value=s.projectId;
+        if(s.region)document.getElementById('cfg-region').value=s.region;
+        if(s.zone)document.getElementById('cfg-zone').value=s.zone;
+        selectRobot(sessionStorage.getItem('gops-robot')||'alex');
+      }catch(e){}
+    }
+
+    function saveSettings(){saveCfg();}
+    function getSettings(){try{return JSON.parse(sessionStorage.getItem('gops-cfg')||'{}');}catch(e){return{};}}
+    function toggleSettings(){openSettings();}
+    function testConn(){testCfgConn();}
+    window.addEventListener('load',loadSettings);
+  </script>
 </body>
 </html>"""
 
