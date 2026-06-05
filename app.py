@@ -325,7 +325,7 @@ DASHBOARD = """<!DOCTYPE html>
   @keyframes robotShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
   @keyframes robotSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-  .acard-icon{width:100%;height:120px;overflow:hidden;border-radius:8px 8px 0 0;margin-bottom:8px;} .acard-icon img{width:100%;height:120px;object-fit:cover;object-position:center top;border-radius:8px;transition:transform 0.3s ease;} .acard-icon img:hover{transform:scale(1.05);}
+  .acard-icon{width:64px;height:64px;overflow:hidden;border-radius:50%;margin:0 auto 8px;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.4);} .acard-icon img{width:64px;height:64px;object-fit:cover;object-position:center top;border-radius:50%;transition:transform 0.3s ease,box-shadow 0.3s ease;} .acard-icon img:hover{transform:scale(1.1);box-shadow:0 0 20px rgba(52,211,153,0.7);}
   </style>
 </head>
 <body>
