@@ -263,7 +263,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   /* ── Agent cards ── */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
-  .acard{background:#161b22;padding:4px 10px;display:flex;flex-direction:column;gap:2px;border-top:3px solid transparent;transition:all .3s}
+  .acard{background:#161b22;padding:6px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
   .acard-icon{font-size:1.4rem}
@@ -325,7 +325,7 @@ DASHBOARD = """<!DOCTYPE html>
   @keyframes robotShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
   @keyframes robotSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
-  .acard-icon{width:36px;height:36px;overflow:hidden;border-radius:50%;margin:0 auto 4px;border:2px solid #34d399;box-shadow:0 0 8px rgba(52,211,153,0.4);flex-shrink:0;} .acard-icon img{width:36px;height:36px;object-fit:cover;object-position:center 10%;border-radius:50%;transition:transform 0.3s ease;} .acard-icon img:hover{transform:scale(1.08);}
+  .acard-icon{width:48px;height:48px;overflow:hidden;border-radius:50%;border:2px solid #34d399;box-shadow:0 0 10px rgba(52,211,153,0.4);flex-shrink:0;} .acard-icon img{width:48px;height:48px;object-fit:cover;object-position:center 10%;border-radius:50%;transition:transform 0.3s ease;} .acard-icon img:hover{transform:scale(1.08);}
   </style>
 </head>
 <body>
