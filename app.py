@@ -24,7 +24,7 @@ if api_key:
 
 app = FastAPI(title="GreenOps AI Dashboard")
 
-# â”€â”€ Global state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Global state â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 pipeline_status = {"running": False, "complete": False}
 _sse_queues: list = []
 
@@ -39,7 +39,7 @@ async def _broadcast(data: dict):
             pass
 
 
-# â”€â”€ Rate-limit helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Rate-limit helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 MAX_RETRIES = 5
 
 # Exponential backoff delays for 503 errors (seconds): 20, 40, 80, 120, 180
@@ -64,8 +64,8 @@ def _is_retryable_error(e: Exception) -> bool:
 def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     """
     Exponential backoff for retries.
-    503 UNAVAILABLE â†’ exponential: 20s, 40s, 80s, 120s, 180s
-    429 RESOURCE_EXHAUSTED â†’ extracts retryDelay from payload or defaults to 65s.
+    503 UNAVAILABLE â†' exponential: 20s, 40s, 80s, 120s, 180s
+    429 RESOURCE_EXHAUSTED â†' extracts retryDelay from payload or defaults to 65s.
     """
     msg = str(e)
     # Always honour explicit retryDelay from API payload
@@ -78,7 +78,7 @@ def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     return 65  # safe default for 429 quota window
 
 
-# â”€â”€ Pipeline runner (with auto-retry on 429) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Pipeline runner (with auto-retry on 429) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
@@ -133,7 +133,7 @@ async def run_pipeline(mode: str):
                                 "time": datetime.now().strftime("%H:%M:%S")
                             })
 
-            # â”€â”€ Success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            # â"€â"€ Success â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
             await _broadcast({"type": "done", "time": datetime.now().strftime("%H:%M:%S")})
             break  # exit retry loop on success
 
@@ -146,7 +146,7 @@ async def run_pipeline(mode: str):
                 else:
                     label = (
                         f"â³ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
-                        f"Auto-retrying in {wait}s â€” this is normal on the free plan."
+                        f"Auto-retrying in {wait}s â€" this is normal on the free plan."
                     )
                 await _broadcast({
                     "type": "retry",
@@ -156,16 +156,16 @@ async def run_pipeline(mode: str):
                     "time": datetime.now().strftime("%H:%M:%S"),
                     "message": label
                 })
-                logger.warning("Retryable error on attempt %d/%d â€” waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
+                logger.warning("Retryable error on attempt %d/%d â€" waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
                 await asyncio.sleep(wait)
-                # continue â†’ next attempt
+                # continue â†' next attempt
             else:
                 # Non-retryable error, or exhausted all retries
                 if _is_retryable_error(e):
                     friendly = (
                         "ðŸš« Pipeline failed after 3 retries.\n\n"
-                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded â€” try again in 30s.\n"
-                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit â€” wait ~1 min or enable billing."
+                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded â€" try again in 30s.\n"
+                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit â€" wait ~1 min or enable billing."
                     )
                     await _broadcast({"type": "error", "message": friendly})
                 else:
@@ -175,10 +175,10 @@ async def run_pipeline(mode: str):
     pipeline_status = {"running": False, "complete": True}
 
 
-# â”€â”€ API endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ API endpoints â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 @app.get("/stream")
 async def stream():
-    """SSE endpoint â€” browser connects here to receive live events."""
+    """SSE endpoint â€" browser connects here to receive live events."""
     q: asyncio.Queue = asyncio.Queue()
     _sse_queues.append(q)
 
@@ -219,7 +219,7 @@ async def status():
 async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
     """
     Cloud Scheduler calls this endpoint every hour.
-    Protected by X-Scheduler-Secret header â€” set SCHEDULER_SECRET env var.
+    Protected by X-Scheduler-Secret header â€" set SCHEDULER_SECRET env var.
     Runs a full GCP resource scan and sends results to Gmail + Slack.
     """
     expected = os.getenv("SCHEDULER_SECRET", "")
@@ -239,18 +239,18 @@ async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
-# â”€â”€ Dashboard HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Dashboard HTML â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 DASHBOARD = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ðŸŒ± GreenOps AI Dashboard</title>
+<title>&#127793; GreenOps AI Dashboard</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-  /* â”€â”€ Header â”€â”€ */
+  /* â"€â"€ Header â"€â"€ */
   .header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   .logo{font-size:1.25rem;font-weight:700;color:#58a6ff;display:flex;align-items:center;gap:8px}
   .logo-green{color:#3fb950}
@@ -261,7 +261,7 @@ DASHBOARD = """<!DOCTYPE html>
   .dot.done{background:#3fb950}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
-  /* â”€â”€ Agent cards â”€â”€ */
+  /* â"€â"€ Agent cards â"€â"€ */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
   .acard{background:#161b22;padding:6px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
@@ -269,14 +269,14 @@ DASHBOARD = """<!DOCTYPE html>
   .acard-icon{font-size:1.4rem}
   .acard-num{font-size:.6875rem;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:.8px}
   .acard-name{font-size:.75rem;font-weight:600;color:#c9d1d9}
-  .acard-status{font-size:.75rem;color:#484f58}
+  .acard-status{font-size:.75rem;color:#9ca3af;font-weight:500;}
   .acard-status.running{color:#f0883e}
   .acard-status.done{color:#3fb950}
 
-  /* â”€â”€ Main area â”€â”€ */
+  /* â"€â"€ Main area â"€â"€ */
   .main{display:grid;grid-template-columns:1fr 300px;flex:1;overflow:hidden;min-height:0}
 
-  /* â”€â”€ Terminal â”€â”€ */
+  /* â"€â"€ Terminal â"€â"€ */
   .terminal{background:#0d1117;padding:18px 22px;overflow-y:auto;font-family:'Consolas','JetBrains Mono','Courier New',monospace;font-size:.8rem;line-height:1.65}
   .terminal::-webkit-scrollbar{width:5px}
   .terminal::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -291,7 +291,7 @@ DASHBOARD = """<!DOCTYPE html>
   .t-text{color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
   .t-error{color:#f85149}
 
-  /* â”€â”€ Sidebar â”€â”€ */
+  /* â"€â"€ Sidebar â"€â"€ */
   .sidebar{background:#161b22;border-left:1px solid #21262d;display:flex;flex-direction:column;overflow-y:auto}
   .sidebar::-webkit-scrollbar{width:5px}
   .sidebar::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -344,9 +344,9 @@ DASHBOARD = """<!DOCTYPE html>
 </head>
 <body>
 
-<!-- â”€â”€ Header â”€â”€ -->
+<!-- â"€â"€ Header â"€â"€ -->
 <div class="header">
-  <div class="logo">ðŸŒ± GreenOps <span class="logo-green">AI Dashboard</span></div>
+  <div class="logo">&#127793; GreenOps <span class="logo-green">AI Dashboard</span></div>
   <div class="header-right">
     <div class="status-badge">
       <div class="dot" id="dot"></div>
@@ -355,7 +355,7 @@ DASHBOARD = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- â”€â”€ Agent cards â”€â”€ -->
+<!-- â"€â"€ Agent cards â"€â"€ -->
 <div class="agents-strip">
   <div class="acard" id="card-carbon_scout">
     <div class="acard-icon"><img src="data:image/jpeg;base64,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" alt="Carbon Scout"/></div>
@@ -383,7 +383,7 @@ DASHBOARD = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- â”€â”€ Main â”€â”€ -->
+<!-- â"€â"€ Main â"€â"€ -->
 <div class="main">
 
   <!-- Terminal -->
@@ -391,7 +391,7 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="welcome" style="padding:0;position:relative;overflow:hidden;border-radius:8px">
       <canvas id="bgcanvas" style="width:100%;display:block;border-radius:8px;max-height:340px"></canvas>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;background:linear-gradient(transparent,rgba(2,14,8,0.95));text-align:center">
-        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">ðŸŒ± Welcome to GreenOps AI Dashboard</h2>
+        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">&#127793; Welcome to GreenOps AI Dashboard</h2>
         <p style="font-size:0.78rem;color:#6ee7b7">Click <strong style="color:#3fb950">Run Demo</strong> to scan a simulated GCP project or <strong style="color:#58a6ff">Run Real GCP</strong> to scan your actual cloud.</p>
         <div style="font-size:0.7rem;color:#34d399;margin-top:6px;opacity:0.7">Powered by Google ADK + Gemini 2.5 Pro âœ¨</div>
       </div>
@@ -412,30 +412,30 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="sb-section">
       <div class="sb-title">Live Metrics</div>
       <div class="metric">
-        <div class="metric-icon">ðŸ’°</div>
+        <div class="metric-icon">ðŸ'°</div>
         <div>
-          <div class="metric-val" id="m-cost">â€”</div>
+          <div class="metric-val" id="m-cost">â€"</div>
           <div class="metric-lbl">Monthly savings</div>
         </div>
       </div>
       <div class="metric">
         <div class="metric-icon">ðŸŒ¿</div>
         <div>
-          <div class="metric-val" id="m-co2">â€”</div>
+          <div class="metric-val" id="m-co2">â€"</div>
           <div class="metric-lbl">COâ‚‚ saved / month</div>
         </div>
       </div>
       <div class="metric">
-        <div class="metric-icon">ðŸ–¥ï¸</div>
+        <div class="metric-icon">ðŸ-¥ï¸</div>
         <div>
-          <div class="metric-val" id="m-vms">â€”</div>
+          <div class="metric-val" id="m-vms">â€"</div>
           <div class="metric-lbl">Idle VMs found</div>
         </div>
       </div>
       <div class="metric">
         <div class="metric-icon">âœ…</div>
         <div>
-          <div class="metric-val" id="m-actions">â€”</div>
+          <div class="metric-val" id="m-actions">â€"</div>
           <div class="metric-lbl">LOW risk actions</div>
         </div>
       </div>
@@ -451,7 +451,7 @@ DASHBOARD = """<!DOCTYPE html>
 
     <div class="sb-links">
       <a class="sb-link" href="https://github.com/raghu-putta/greenops-agent" target="_blank">â­ View on GitHub</a>
-      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">ðŸ“– Google ADK Docs</a>
+      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">ðŸ"- Google ADK Docs</a>
     </div>
 
   </div>
@@ -469,7 +469,7 @@ DASHBOARD = """<!DOCTYPE html>
   let activeAgent = null;
   let es = null;
 
-  // â”€â”€ SSE connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ SSE connection â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function connect() {
     es = new EventSource('/stream');
     es.onmessage = onEvent;
@@ -483,8 +483,8 @@ DASHBOARD = """<!DOCTYPE html>
       clearTerminal(); resetCards();
       setBtns(true);
       setStatus('running', `Running ${d.mode === 'demo' ? 'ðŸ§ª Demo' : 'â˜ï¸ Real GCP'} pipeline...`);
-      print(`<div class="t-timestamp">[${d.time}]  Pipeline started â€” ${d.mode} mode</div>`);
-      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
+      print(`<div class="t-timestamp">[${d.time}]  Pipeline started â€" ${d.mode} mode</div>`);
+      print(`<div class="t-separator">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
       activeAgent = null;
     }
 
@@ -510,13 +510,13 @@ DASHBOARD = """<!DOCTYPE html>
       activeAgent = null;
       setStatus('done', 'âœ… Pipeline complete');
       setBtns(false);
-      print(`<div class="t-separator" style="margin-top:12px">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
-      print(`<div class="t-timestamp">[${d.time}]  âœ… Done â€” full report saved to output/</div>`);
+      print(`<div class="t-separator" style="margin-top:12px">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
+      print(`<div class="t-timestamp">[${d.time}]  âœ… Done â€" full report saved to output/</div>`);
     }
 
     else if (d.type === 'retry') {
-      setStatus('running', `â³ Rate limit â€” retrying in ${d.wait}s (${d.attempt}/${d.max})â€¦`);
-      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
+      setStatus('running', `â³ Rate limit â€" retrying in ${d.wait}s (${d.attempt}/${d.max})â€¦`);
+      print(`<div class="t-separator">â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€</div>`);
       print(`<div class="t-error" style="color:#f0883e">${esc(d.message)}</div>`);
       // Live countdown
       let remaining = d.wait;
@@ -539,7 +539,7 @@ DASHBOARD = """<!DOCTYPE html>
     }
   }
 
-  // â”€â”€ Run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Run â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function run(mode) {
     fetch(`/run/${mode}`, {method:'POST'})
       .then(r => r.json())
@@ -547,7 +547,7 @@ DASHBOARD = """<!DOCTYPE html>
       .catch(err => alert('Could not start pipeline: ' + err));
   }
 
-  // â”€â”€ Terminal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Terminal helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function clearTerminal() {
     document.getElementById('terminal').innerHTML = '';
   }
@@ -562,7 +562,7 @@ DASHBOARD = """<!DOCTYPE html>
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
   }
 
-  // â”€â”€ Card helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Card helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function resetCards() {
     Object.values(AGENTS).forEach(a => {
       const c = document.getElementById('card-' + a.id);
@@ -571,7 +571,7 @@ DASHBOARD = """<!DOCTYPE html>
       if (s) { s.className = "acard-status"; s.textContent = agentIdleText[id] || "Idle"; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
-      document.getElementById(id).textContent = 'â€”';
+      document.getElementById(id).textContent = 'â€"';
     });
   }
   function markActive(key) {
@@ -589,19 +589,19 @@ DASHBOARD = """<!DOCTYPE html>
       if (s) { s.className = "acard-status done"; s.textContent = agentDoneText[id] || "Done!"; }
   }
 
-  // â”€â”€ Status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Status bar â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function setStatus(state, text) {
     document.getElementById('dot').className = 'dot ' + state;
     document.getElementById('status-txt').textContent = text;
   }
 
-  // â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Buttons â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function setBtns(disabled) {
     document.getElementById('btn-demo').disabled = disabled;
     document.getElementById('btn-real').disabled = disabled;
   }
 
-  // â”€â”€ Metric extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Metric extraction â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   function extractMetrics(text) {
     // Cost
     const cm = text.match(/TOTAL.*?\\$([\\d,.]+)/i) || text.match(/\\$([\\d,.]+).*?month/i);
@@ -622,7 +622,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   connect();
 
-  // â”€â”€ Cinematic GreenOps Universe Background â”€â”€
+  // â"€â"€ Cinematic GreenOps Universe Background â"€â"€
   (function(){
     const c=document.getElementById('bgcanvas');
     if(!c)return;
