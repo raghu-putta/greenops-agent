@@ -326,6 +326,20 @@ DASHBOARD = """<!DOCTYPE html>
   @keyframes robotSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
   .acard-icon{width:58px;height:58px;overflow:hidden;border-radius:50%;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:-6px 0;} .acard-icon img{width:58px;height:58px;object-fit:cover;object-position:center 10%;border-radius:50%;transition:transform 0.3s ease;} .acard-icon img:hover{transform:scale(1.08);}
+  
+  .acard:nth-child(1) .acard-num{color:#34d399;}
+  .acard:nth-child(1) .acard-name{color:#34d399;}
+  .acard:nth-child(2) .acard-num{color:#60a5fa;}
+  .acard:nth-child(2) .acard-name{color:#60a5fa;}
+  .acard:nth-child(3) .acard-num{color:#f97316;}
+  .acard:nth-child(3) .acard-name{color:#f97316;}
+  .acard:nth-child(4) .acard-num{color:#a78bfa;}
+  .acard:nth-child(4) .acard-name{color:#a78bfa;}
+  .acard:nth-child(1) .acard-icon{border-color:#34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);}
+  .acard:nth-child(2) .acard-icon{border-color:#60a5fa;box-shadow:0 0 12px rgba(96,165,250,0.5);}
+  .acard:nth-child(3) .acard-icon{border-color:#f97316;box-shadow:0 0 12px rgba(249,115,22,0.5);}
+  .acard:nth-child(4) .acard-icon{border-color:#a78bfa;box-shadow:0 0 12px rgba(167,139,250,0.5);}
+
   </style>
 </head>
 <body>
@@ -554,7 +568,7 @@ DASHBOARD = """<!DOCTYPE html>
       const c = document.getElementById('card-' + a.id);
       if (c) c.className = 'acard';
       const s = document.getElementById(a.statusId);
-      if (s) { s.className = 'acard-status'; s.textContent = 'Waiting'; }
+      if (s) { s.className = 'acard-status'; s.textContent = 'Idle'; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
       document.getElementById(id).textContent = '—';
