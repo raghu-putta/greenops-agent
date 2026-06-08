@@ -406,7 +406,7 @@ DASHBOARD = """<!DOCTYPE html>
 <div class="main">
 
   <!-- Terminal -->
-  <div class="terminal" id="terminal" style="min-height:200px;border:1px solid #34d399;">
+  <div class="terminal" id="terminal">
     <div class="welcome" style="padding:0;position:relative;overflow:hidden;border-radius:8px">
       <canvas id="bgcanvas" style="width:100%;display:block;border-radius:8px;max-height:340px"></canvas>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;background:linear-gradient(transparent,rgba(2,14,8,0.95));text-align:center">
