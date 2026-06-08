@@ -581,7 +581,7 @@ DASHBOARD = """<!DOCTYPE html>
       const c = document.getElementById('card-' + a.id);
       if (c) c.className = 'acard';
       const s = document.getElementById(a.statusId);
-      if (s) { s.className = 'acard-status'; s.textContent = agentIdleText[id] || 'Idle'; }
+      if (s) { s.className = 'acard-status'; s.textContent = agentIdleText[a.statusId.replace('-status','')] || 'Scouting'; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
       document.getElementById(id).textContent = '—';
@@ -592,14 +592,14 @@ DASHBOARD = """<!DOCTYPE html>
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard active';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status running'; s.textContent = agentRunText[id] || 'Running...'; }
+    if (s) { s.className = 'acard-status running'; s.textContent = agentRunText[a.statusId.replace('-status','')] || 'Running...'; }
   }
   function markDone(key) {
     const a = AGENTS[key]; if (!a) return;
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard done';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = agentDoneText[id] || 'Done!'; }
+    if (s) { s.className = 'acard-status done'; s.textContent = agentDoneText[a.statusId.replace('-status','')] || 'Done!'; }
   }
 
   // ── Status bar ──────────────────────────────────────────────────────────────
