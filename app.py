@@ -1,4 +1,4 @@
-"""
+﻿"""
 GreenOps AI Web Dashboard
 Real-time 4-agent pipeline visualization with FastAPI + SSE streaming.
 
@@ -12,7 +12,7 @@ import os
 import re
 from datetime import datetime
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Request, Header, HTTPException
+from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ if api_key:
 
 app = FastAPI(title="GreenOps AI Dashboard")
 
-# ── Global state ──────────────────────────────────────────────────────────────
+# â”€â”€ Global state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 pipeline_status = {"running": False, "complete": False}
 _sse_queues: list = []
 
@@ -39,7 +39,7 @@ async def _broadcast(data: dict):
             pass
 
 
-# ── Rate-limit helpers ────────────────────────────────────────────────────────
+# â”€â”€ Rate-limit helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 MAX_RETRIES = 5
 
 # Exponential backoff delays for 503 errors (seconds): 20, 40, 80, 120, 180
@@ -64,8 +64,8 @@ def _is_retryable_error(e: Exception) -> bool:
 def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     """
     Exponential backoff for retries.
-    503 UNAVAILABLE → exponential: 20s, 40s, 80s, 120s, 180s
-    429 RESOURCE_EXHAUSTED → extracts retryDelay from payload or defaults to 65s.
+    503 UNAVAILABLE â†’ exponential: 20s, 40s, 80s, 120s, 180s
+    429 RESOURCE_EXHAUSTED â†’ extracts retryDelay from payload or defaults to 65s.
     """
     msg = str(e)
     # Always honour explicit retryDelay from API payload
@@ -78,7 +78,7 @@ def _retry_delay_seconds(e: Exception, attempt: int) -> int:
     return 65  # safe default for 429 quota window
 
 
-# ── Pipeline runner (with auto-retry on 429) ──────────────────────────────────
+# â”€â”€ Pipeline runner (with auto-retry on 429) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
@@ -133,7 +133,7 @@ async def run_pipeline(mode: str):
                                 "time": datetime.now().strftime("%H:%M:%S")
                             })
 
-            # ── Success ──────────────────────────────────────────────────────
+            # â”€â”€ Success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             await _broadcast({"type": "done", "time": datetime.now().strftime("%H:%M:%S")})
             break  # exit retry loop on success
 
@@ -142,11 +142,11 @@ async def run_pipeline(mode: str):
                 wait = _retry_delay_seconds(e, attempt)
                 msg = str(e)
                 if "503" in msg or "UNAVAILABLE" in msg or "high demand" in msg.lower():
-                    label = f"⏳ Gemini API model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}s…"
+                    label = f"â³ Gemini API model overloaded (attempt {attempt}/{MAX_RETRIES}). Auto-retrying in {wait}sâ€¦"
                 else:
                     label = (
-                        f"⏳ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
-                        f"Auto-retrying in {wait}s — this is normal on the free plan."
+                        f"â³ Gemini rate limit hit (attempt {attempt}/{MAX_RETRIES}). "
+                        f"Auto-retrying in {wait}s â€” this is normal on the free plan."
                     )
                 await _broadcast({
                     "type": "retry",
@@ -156,16 +156,16 @@ async def run_pipeline(mode: str):
                     "time": datetime.now().strftime("%H:%M:%S"),
                     "message": label
                 })
-                logger.warning("Retryable error on attempt %d/%d — waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
+                logger.warning("Retryable error on attempt %d/%d â€” waiting %ds: %s", attempt, MAX_RETRIES, wait, e)
                 await asyncio.sleep(wait)
-                # continue → next attempt
+                # continue â†’ next attempt
             else:
                 # Non-retryable error, or exhausted all retries
                 if _is_retryable_error(e):
                     friendly = (
-                        "🚫 Pipeline failed after 3 retries.\n\n"
-                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded — try again in 30s.\n"
-                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit — wait ~1 min or enable billing."
+                        "ðŸš« Pipeline failed after 3 retries.\n\n"
+                        "If you saw '503 UNAVAILABLE': Gemini API was overloaded â€” try again in 30s.\n"
+                        "If you saw '429 RESOURCE_EXHAUSTED': quota hit â€” wait ~1 min or enable billing."
                     )
                     await _broadcast({"type": "error", "message": friendly})
                 else:
@@ -175,10 +175,10 @@ async def run_pipeline(mode: str):
     pipeline_status = {"running": False, "complete": True}
 
 
-# ── API endpoints ─────────────────────────────────────────────────────────────
+# â”€â”€ API endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.get("/stream")
 async def stream():
-    """SSE endpoint — browser connects here to receive live events."""
+    """SSE endpoint â€” browser connects here to receive live events."""
     q: asyncio.Queue = asyncio.Queue()
     _sse_queues.append(q)
 
@@ -219,7 +219,7 @@ async def status():
 async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
     """
     Cloud Scheduler calls this endpoint every hour.
-    Protected by X-Scheduler-Secret header — set SCHEDULER_SECRET env var.
+    Protected by X-Scheduler-Secret header â€” set SCHEDULER_SECRET env var.
     Runs a full GCP resource scan and sends results to Gmail + Slack.
     """
     expected = os.getenv("SCHEDULER_SECRET", "")
@@ -239,19 +239,19 @@ async def scheduled_scan(x_scheduler_secret: str = Header(default="")):
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
-# ── Dashboard HTML ────────────────────────────────────────────────────────────
+# â”€â”€ Dashboard HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DASHBOARD = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <link rel="icon" type="image/png" href="data:image/png;base64,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"/>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🌱 GreenOps AI Dashboard</title>
+<title>ðŸŒ± GreenOps AI Dashboard</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-  /* ── Header ── */
+  /* â”€â”€ Header â”€â”€ */
   .header{background:#161b22;border-bottom:1px solid #30363d;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
   .logo{font-size:1.25rem;font-weight:700;color:#58a6ff;display:flex;align-items:center;gap:8px}
   .logo-green{color:#3fb950}
@@ -262,7 +262,7 @@ DASHBOARD = """<!DOCTYPE html>
   .dot.done{background:#3fb950}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
-  /* ── Agent cards ── */
+  /* â”€â”€ Agent cards â”€â”€ */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
   .acard{background:#161b22;padding:16px 20px;display:flex;flex-direction:column;gap:5px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
@@ -274,10 +274,10 @@ DASHBOARD = """<!DOCTYPE html>
   .acard-status.running{color:#f0883e}
   .acard-status.done{color:#3fb950}
 
-  /* ── Main area ── */
+  /* â”€â”€ Main area â”€â”€ */
   .main{display:grid;grid-template-columns:1fr 300px;flex:1;overflow:hidden;min-height:0}
 
-  /* ── Terminal ── */
+  /* â”€â”€ Terminal â”€â”€ */
   .terminal{background:#0d1117;padding:18px 22px;overflow-y:auto;font-family:'Consolas','JetBrains Mono','Courier New',monospace;font-size:.8rem;line-height:1.65}
   .terminal::-webkit-scrollbar{width:5px}
   .terminal::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -292,7 +292,7 @@ DASHBOARD = """<!DOCTYPE html>
   .t-text{color:#c9d1d9;white-space:pre-wrap;word-break:break-word}
   .t-error{color:#f85149}
 
-  /* ── Sidebar ── */
+  /* â”€â”€ Sidebar â”€â”€ */
   .sidebar{background:#161b22;border-left:1px solid #21262d;display:flex;flex-direction:column;overflow-y:auto}
   .sidebar::-webkit-scrollbar{width:5px}
   .sidebar::-webkit-scrollbar-thumb{background:#30363d;border-radius:3px}
@@ -372,18 +372,19 @@ DASHBOARD = """<!DOCTYPE html>
 </head>
 <body>
 
-<!-- ── Header ── -->
+<!-- â”€â”€ Header â”€â”€ -->
 <div class="header">
-  <div class="logo">🌱 GreenOps <span class="logo-green">AI Dashboard</span></div>
+  <div class="logo">ðŸŒ± GreenOps <span class="logo-green">AI Dashboard</span></div>
   <div class="header-right">
     <div class="status-badge">
       <div class="dot" id="dot"></div>
       <span id="status-txt">Ready</span>
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle Dark/Light Mode">&#9790; Dark</button>
   </div>
 </div>
 
-<!-- ── Agent cards ── -->
+<!-- â”€â”€ Agent cards â”€â”€ -->
 <div class="agents-strip">
   <div class="acard" id="card-carbon_scout">
     <div class="acard-icon"><img src="data:image/webp;base64,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" alt="Carbon Scout"/></div>
@@ -411,7 +412,7 @@ DASHBOARD = """<!DOCTYPE html>
   </div>
 </div>
 
-<!-- ── Main ── -->
+<!-- â”€â”€ Main â”€â”€ -->
 <div class="main">
 
   <!-- Terminal -->
@@ -419,9 +420,9 @@ DASHBOARD = """<!DOCTYPE html>
     <div class="welcome" style="padding:0;position:relative;overflow:hidden;border-radius:8px">
       <canvas id="bgcanvas" style="width:100%;display:block;border-radius:8px;max-height:340px"></canvas>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:18px;background:linear-gradient(transparent,rgba(2,14,8,0.95));text-align:center">
-        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">🌱 Welcome to GreenOps AI Dashboard</h2>
+        <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">ðŸŒ± Welcome to GreenOps AI Dashboard</h2>
         <p style="font-size:0.78rem;color:#6ee7b7">Click <strong style="color:#3fb950">Run Demo</strong> to scan a simulated GCP project or <strong style="color:#58a6ff">Run Real GCP</strong> to scan your actual cloud.</p>
-        <div style="font-size:0.7rem;color:#34d399;margin-top:6px;opacity:0.7">Powered by Google ADK + Gemini 2.5 Pro ✨</div>
+        <div style="font-size:0.7rem;color:#34d399;margin-top:6px;opacity:0.7">Powered by Google ADK + Gemini 2.5 Pro âœ¨</div>
       </div>
     </div>
   </div>
@@ -431,39 +432,39 @@ DASHBOARD = """<!DOCTYPE html>
 
     <div class="sb-section">
       <div class="sb-title">Run Pipeline</div>
-      <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">🧪 Run Demo Mode</button>
-      <button class="btn btn-real" id="btn-real" onclick="run('real')">☁️ Run Real GCP</button>
+      <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">ðŸ§ª Run Demo Mode</button>
+      <button class="btn btn-real" id="btn-real" onclick="run('real')">â˜ï¸ Run Real GCP</button>
       <button class="btn-settings" onclick="openSettings()">&#9881; Configure GCP</button>
-      <div class="model-pill">✨ Model: <b>gemini-2.5-pro</b></div>
+      <div class="model-pill">âœ¨ Model: <b>gemini-2.5-pro</b></div>
     </div>
 
     <div class="sb-section">
       <div class="sb-title">Live Metrics</div>
       <div class="metric">
-        <div class="metric-icon">💰</div>
+        <div class="metric-icon">ðŸ’°</div>
         <div>
-          <div class="metric-val" id="m-cost">—</div>
+          <div class="metric-val" id="m-cost">â€”</div>
           <div class="metric-lbl">Monthly savings</div>
         </div>
       </div>
       <div class="metric">
-        <div class="metric-icon">🌿</div>
+        <div class="metric-icon">ðŸŒ¿</div>
         <div>
-          <div class="metric-val" id="m-co2">—</div>
-          <div class="metric-lbl">CO₂ saved / month</div>
+          <div class="metric-val" id="m-co2">â€”</div>
+          <div class="metric-lbl">COâ‚‚ saved / month</div>
         </div>
       </div>
       <div class="metric">
-        <div class="metric-icon">🖥️</div>
+        <div class="metric-icon">ðŸ–¥ï¸</div>
         <div>
-          <div class="metric-val" id="m-vms">—</div>
+          <div class="metric-val" id="m-vms">â€”</div>
           <div class="metric-lbl">Idle VMs found</div>
         </div>
       </div>
       <div class="metric">
-        <div class="metric-icon">✅</div>
+        <div class="metric-icon">âœ…</div>
         <div>
-          <div class="metric-val" id="m-actions">—</div>
+          <div class="metric-val" id="m-actions">â€”</div>
           <div class="metric-lbl">LOW risk actions</div>
         </div>
       </div>
@@ -478,8 +479,8 @@ DASHBOARD = """<!DOCTYPE html>
     </div>
 
     <div class="sb-links">
-      <a class="sb-link" href="https://github.com/raghu-putta/greenops-agent" target="_blank">⭐ View on GitHub</a>
-      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">📖 Google ADK Docs</a>
+      <a class="sb-link" href="https://github.com/raghu-putta/greenops-agent" target="_blank">â­ View on GitHub</a>
+      <a class="sb-link" href="https://google.github.io/adk-docs/" target="_blank">ðŸ“– Google ADK Docs</a>
     </div>
 
   </div>
@@ -497,7 +498,7 @@ DASHBOARD = """<!DOCTYPE html>
   let activeAgent = null;
   let es = null;
 
-  // ── SSE connection ──────────────────────────────────────────────────────────
+  // â”€â”€ SSE connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function connect() {
     es = new EventSource('/stream');
     es.onmessage = onEvent;
@@ -510,9 +511,9 @@ DASHBOARD = """<!DOCTYPE html>
     if (d.type === 'start') {
       clearTerminal(); resetCards();
       setBtns(true);
-      setStatus('running', `Running ${d.mode === 'demo' ? '🧪 Demo' : '☁️ Real GCP'} pipeline...`);
-      print(`<div class="t-timestamp">[${d.time}]  Pipeline started — ${d.mode} mode</div>`);
-      print(`<div class="t-separator">─────────────────────────────────────────────────</div>`);
+      setStatus('running', `Running ${d.mode === 'demo' ? 'ðŸ§ª Demo' : 'â˜ï¸ Real GCP'} pipeline...`);
+      print(`<div class="t-timestamp">[${d.time}]  Pipeline started â€” ${d.mode} mode</div>`);
+      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
       activeAgent = null;
     }
 
@@ -536,38 +537,38 @@ DASHBOARD = """<!DOCTYPE html>
     else if (d.type === 'done') {
       if (activeAgent) markDone(activeAgent);
       activeAgent = null;
-      setStatus('done', '✅ Pipeline complete');
+      setStatus('done', 'âœ… Pipeline complete');
       setBtns(false);
-      print(`<div class="t-separator" style="margin-top:12px">─────────────────────────────────────────────────</div>`);
-      print(`<div class="t-timestamp">[${d.time}]  ✅ Done — full report saved to output/</div>`);
+      print(`<div class="t-separator" style="margin-top:12px">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
+      print(`<div class="t-timestamp">[${d.time}]  âœ… Done â€” full report saved to output/</div>`);
     }
 
     else if (d.type === 'retry') {
-      setStatus('running', `⏳ Rate limit — retrying in ${d.wait}s (${d.attempt}/${d.max})…`);
-      print(`<div class="t-separator">─────────────────────────────────────────────────</div>`);
+      setStatus('running', `â³ Rate limit â€” retrying in ${d.wait}s (${d.attempt}/${d.max})â€¦`);
+      print(`<div class="t-separator">â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€</div>`);
       print(`<div class="t-error" style="color:#f0883e">${esc(d.message)}</div>`);
       // Live countdown
       let remaining = d.wait;
       const counterId = 'retry-counter-' + Date.now();
-      print(`<div id="${counterId}" class="t-timestamp">  ↻ Retrying in <b>${remaining}s</b>…</div>`);
+      print(`<div id="${counterId}" class="t-timestamp">  â†» Retrying in <b>${remaining}s</b>â€¦</div>`);
       const tick = setInterval(() => {
         remaining--;
         const el = document.getElementById(counterId);
         if (el) el.innerHTML = remaining > 0
-          ? `  ↻ Retrying in <b>${remaining}s</b>…`
-          : `  ↻ Retrying now…`;
+          ? `  â†» Retrying in <b>${remaining}s</b>â€¦`
+          : `  â†» Retrying nowâ€¦`;
         if (remaining <= 0) clearInterval(tick);
       }, 1000);
     }
 
     else if (d.type === 'error') {
-      setStatus('', '❌ Error');
+      setStatus('', 'âŒ Error');
       setBtns(false);
-      print(`<div class="t-error" style="white-space:pre-wrap">❌ ${esc(d.message)}</div>`);
+      print(`<div class="t-error" style="white-space:pre-wrap">âŒ ${esc(d.message)}</div>`);
     }
   }
 
-  // ── Run ─────────────────────────────────────────────────────────────────────
+  // â”€â”€ Run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function run(mode) {
     fetch(`/run/${mode}`, {method:'POST'})
       .then(r => r.json())
@@ -575,7 +576,7 @@ DASHBOARD = """<!DOCTYPE html>
       .catch(err => alert('Could not start pipeline: ' + err));
   }
 
-  // ── Terminal helpers ────────────────────────────────────────────────────────
+  // â”€â”€ Terminal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function clearTerminal() {
     document.getElementById('terminal').innerHTML = '';
   }
@@ -590,7 +591,7 @@ DASHBOARD = """<!DOCTYPE html>
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
   }
 
-  // ── Card helpers ────────────────────────────────────────────────────────────
+  // â”€â”€ Card helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function resetCards() {
     Object.values(AGENTS).forEach(a => {
       const c = document.getElementById('card-' + a.id);
@@ -599,7 +600,7 @@ DASHBOARD = """<!DOCTYPE html>
       if (s) { s.className = 'acard-status'; s.textContent = 'Waiting'; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
-      document.getElementById(id).textContent = '—';
+      document.getElementById(id).textContent = 'â€”';
     });
   }
   function markActive(key) {
@@ -607,36 +608,36 @@ DASHBOARD = """<!DOCTYPE html>
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard active';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status running'; s.textContent = '⚙ Running…'; }
+    if (s) { s.className = 'acard-status running'; s.textContent = 'âš™ Runningâ€¦'; }
   }
   function markDone(key) {
     const a = AGENTS[key]; if (!a) return;
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard done';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = '✓ Done'; }
+    if (s) { s.className = 'acard-status done'; s.textContent = 'âœ“ Done'; }
   }
 
-  // ── Status bar ──────────────────────────────────────────────────────────────
+  // â”€â”€ Status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function setStatus(state, text) {
     document.getElementById('dot').className = 'dot ' + state;
     document.getElementById('status-txt').textContent = text;
   }
 
-  // ── Buttons ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function setBtns(disabled) {
     document.getElementById('btn-demo').disabled = disabled;
     document.getElementById('btn-real').disabled = disabled;
   }
 
-  // ── Metric extraction ────────────────────────────────────────────────────────
+  // â”€â”€ Metric extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function extractMetrics(text) {
     // Cost
     const cm = text.match(/TOTAL.*?\\$([\\d,.]+)/i) || text.match(/\\$([\\d,.]+).*?month/i);
     if (cm) document.getElementById('m-cost').textContent = '$' + cm[1] + '/mo';
 
     // CO2
-    const co2 = text.match(/([\\d.]+)\\s*kg.*?CO[₂2]/i) || text.match(/CO[₂2].*?([\\d.]+)\\s*kg/i);
+    const co2 = text.match(/([\\d.]+)\\s*kg.*?CO[â‚‚2]/i) || text.match(/CO[â‚‚2].*?([\\d.]+)\\s*kg/i);
     if (co2) document.getElementById('m-co2').textContent = co2[1] + ' kg';
 
     // Idle VMs
@@ -650,7 +651,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   connect();
 
-  // ── Cinematic GreenOps Universe Background ──
+  // â”€â”€ Cinematic GreenOps Universe Background â”€â”€
   (function(){
     const c=document.getElementById('bgcanvas');
     if(!c)return;
