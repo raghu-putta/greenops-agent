@@ -508,12 +508,12 @@ DASHBOARD = """<!DOCTYPE html>
     else if (d.type === 'agent') {
       const key = d.agent; // e.g. "CARBON_SCOUT"
       const info = AGENTS[key];
-      if (!info) return; // skip orchestrator
+      // show all agent output
 
-      if (activeAgent && activeAgent !== key) markDone(activeAgent);
+      if (activeAgent && activeAgent !== key && AGENTS[activeAgent]) markDone(activeAgent);
 
       if (activeAgent !== key) {
-        markActive(key);
+        if (info) markActive(key);
         activeAgent = key;
         print(`<div class="t-agent-hdr">[ ${d.agent} ]   ${d.time}</div>`);
       }
