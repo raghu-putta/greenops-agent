@@ -185,8 +185,11 @@ async def stream():
     async def generator():
         try:
             while True:
-                msg = await q.get()
-                yield f"data: {msg}\n\n"
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=20.0)
+                    yield f"data: {msg}\n\n"
+                except asyncio.TimeoutError:
+                    yield ": heartbeat\n\n"
         except asyncio.CancelledError:
             pass
         finally:
