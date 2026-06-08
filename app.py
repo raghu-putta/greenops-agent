@@ -26,6 +26,7 @@ app = FastAPI(title="GreenOps AI Dashboard")
 
 # ── Global state ──────────────────────────────────────────────────────────────
 pipeline_status = {"running": False, "complete": False}
+output_log = []  # stores all pipeline events for polling
 _sse_queues: list = []
 
 
@@ -82,6 +83,7 @@ def _retry_delay_seconds(e: Exception, attempt: int) -> int:
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
+    output_log.clear()  # clear previous run
 
     if mode == "demo":
         from agents.greenops_pipeline_demo import greenops_pipeline_demo as pipeline
@@ -218,6 +220,16 @@ async def run(mode: str):
 @app.get("/status")
 async def status():
     return pipeline_status
+
+@app.get("/poll")
+async def poll(since: int = 0):
+    """Polling endpoint - returns all events since index 'since'"""
+    return {
+        "events": output_log[since:],
+        "total": len(output_log),
+        "running": pipeline_status["running"],
+        "complete": pipeline_status["complete"]
+    }
 
 
 @app.post("/scheduled-scan")
@@ -488,10 +500,42 @@ DASHBOARD = """<!DOCTYPE html>
   let es = null;
 
   // ── SSE connection ──────────────────────────────────────────────────────────
+  var pollIndex = 0;
+  var pollTimer = null;
+  var isPolling = false;
+
+  function startPolling() {
+    pollIndex = 0;
+    isPolling = true;
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(doPoll, 1500);
+    doPoll();
+  }
+
+  function stopPolling() {
+    isPolling = false;
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function doPoll() {
+    fetch("/poll?since=" + pollIndex)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var events = data.events || [];
+        for (var i = 0; i < events.length; i++) {
+          onEvent({data: JSON.stringify(events[i])});
+        }
+        pollIndex = data.total || pollIndex;
+        if (!data.running && data.complete) {
+          stopPolling();
+        }
+      })
+      .catch(function(err){ console.log("Poll error:", err); });
+  }
+
   function connect() {
-    es = new EventSource('/stream');
-    es.onmessage = onEvent;
-    es.onerror   = () => setTimeout(connect, 2000);
+    // Use polling instead of SSE - more reliable on Cloud Run
+    console.log("Using polling mode");
   }
 
   function onEvent(e) {
@@ -573,6 +617,7 @@ DASHBOARD = """<!DOCTYPE html>
       msg.textContent = "[ " + new Date().toLocaleTimeString() + " ]  Initializing " + (mode === "demo" ? "Demo" : "Real GCP") + " pipeline...";
       terminal.appendChild(msg);
     }
+    startPolling();
     fetch("/run/" + mode, {method:"POST"})
       .then(function(r){ return r.json(); })
       .then(function(d){
