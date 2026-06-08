@@ -608,14 +608,14 @@ DASHBOARD = """<!DOCTYPE html>
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard active';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status running'; s.textContent = 'âš™ Runningâ€¦'; }
+    if (s) { s.className = 'acard-status running'; s.textContent = agentRunText[id] || 'Running...'; }
   }
   function markDone(key) {
     const a = AGENTS[key]; if (!a) return;
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard done';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = 'âœ“ Done'; }
+    if (s) { s.className = 'acard-status done'; s.textContent = agentDoneText[id] || 'Done!'; }
   }
 
   // â”€â”€ Status bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
