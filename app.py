@@ -209,7 +209,10 @@ async def run(mode: str):
         return JSONResponse({"error": "Pipeline already running"}, status_code=409)
     if mode not in ("demo", "real"):
         return JSONResponse({"error": "mode must be 'demo' or 'real'"}, status_code=400)
-    asyncio.create_task(run_pipeline(mode))
+    async def delayed_start():
+        await asyncio.sleep(2)
+        await run_pipeline(mode)
+    asyncio.create_task(delayed_start())
     return {"status": "started", "mode": mode}
 
 
