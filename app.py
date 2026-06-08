@@ -183,6 +183,8 @@ async def stream():
     _sse_queues.append(q)
 
     async def generator():
+        for buffered in list(_event_buffer):
+            yield f"data: {buffered}\n\n"
         try:
             while True:
                 try:
@@ -209,10 +211,7 @@ async def run(mode: str):
         return JSONResponse({"error": "Pipeline already running"}, status_code=409)
     if mode not in ("demo", "real"):
         return JSONResponse({"error": "mode must be 'demo' or 'real'"}, status_code=400)
-    async def delayed_start():
-        await asyncio.sleep(2)
-        await run_pipeline(mode)
-    asyncio.create_task(delayed_start())
+    asyncio.create_task(run_pipeline(mode))
     return {"status": "started", "mode": mode}
 
 
@@ -561,10 +560,29 @@ DASHBOARD = """<!DOCTYPE html>
 
   // ── Run ─────────────────────────────────────────────────────────────────────
   function run(mode) {
-    fetch(`/run/${mode}`, {method:'POST'})
-      .then(r => r.json())
-      .then(d => { if (d.error) alert(d.error); })
-      .catch(err => alert('Could not start pipeline: ' + err));
+    var overlay = document.getElementById("spinner-overlay");
+    var txt = document.getElementById("spinner-text");
+    if (overlay) overlay.classList.add("active");
+    if (txt) txt.textContent = mode === "demo" ? "Starting Demo Pipeline..." : "Connecting to GCP...";
+    var terminal = document.getElementById("terminal");
+    if (terminal) {
+      terminal.innerHTML = "";
+      var msg = document.createElement("div");
+      msg.style.color = "#34d399";
+      msg.style.padding = "8px";
+      msg.textContent = "[ " + new Date().toLocaleTimeString() + " ]  Initializing " + (mode === "demo" ? "Demo" : "Real GCP") + " pipeline...";
+      terminal.appendChild(msg);
+    }
+    fetch("/run/" + mode, {method:"POST"})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (overlay) overlay.classList.remove("active");
+        if (d.error) alert(d.error);
+      })
+      .catch(function(err){
+        if (overlay) overlay.classList.remove("active");
+        alert("Could not start: " + err);
+      });
   }
 
   // ── Terminal helpers ────────────────────────────────────────────────────────
