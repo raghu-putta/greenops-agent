@@ -317,8 +317,6 @@ DASHBOARD = """<!DOCTYPE html>
   .sb-links{padding:14px 18px;margin-top:auto}
   .sb-link{display:flex;align-items:center;gap:7px;color:#58a6ff;text-decoration:none;font-size:.8rem;padding:6px 0}
   .sb-link:hover{text-decoration:underline}
-
-  .acard-icon img{width:52px;height:52px;object-fit:cover;object-position:center 10%;border-radius:50%;}
   
   .acard:nth-child(1) .acard-num{color:#34d399;}
   .acard:nth-child(1) .acard-name{color:#34d399;font-weight:600;}
@@ -328,16 +326,19 @@ DASHBOARD = """<!DOCTYPE html>
   .acard:nth-child(3) .acard-name{color:#f97316;font-weight:600;}
   .acard:nth-child(4) .acard-num{color:#a78bfa;}
   .acard:nth-child(4) .acard-name{color:#a78bfa;font-weight:600;}
-  .acard:nth-child(1) .acard-icon{border-color:#34d399;box-shadow:0 0 10px rgba(52,211,153,0.5);}
-  .acard:nth-child(2) .acard-icon{border-color:#60a5fa;box-shadow:0 0 10px rgba(96,165,250,0.5);}
-  .acard:nth-child(3) .acard-icon{border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,0.5);}
-  .acard:nth-child(4) .acard-icon{border-color:#a78bfa;box-shadow:0 0 10px rgba(167,139,250,0.5);}
+  .acard:nth-child(1)
+  .acard:nth-child(2)
+  .acard:nth-child(3)
+  .acard:nth-child(4)
   @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   @keyframes pulse-glow{0%,100%{box-shadow:0 0 10px rgba(52,211,153,0.4)}50%{box-shadow:0 0 25px rgba(52,211,153,0.8)}}
   .robot-bubble{animation:fadeInUp 0.4s ease;}
   .robot-avatar-wrap{animation:pulse-glow 2s ease-in-out infinite;}
 
-  </style>
+  
+  .acard-icon{width:80px;height:80px;overflow:hidden;border-radius:50% !important;border:3px solid #34d399;box-shadow:0 0 16px rgba(52,211,153,0.6);flex-shrink:0;margin:-16px 0;}
+  .acard-icon img{width:80px;height:80px;object-fit:cover;object-position:center 15%;border-radius:50% !important;}
+</style>
 </head>
 <body>
 
