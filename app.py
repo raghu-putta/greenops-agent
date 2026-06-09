@@ -264,9 +264,10 @@ DASHBOARD = """<!DOCTYPE html>
 
   /* ── Agent cards ── */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
-  .acard{background:#161b22;padding:0 12px;display:flex;flex-direction:row;align-items:center;gap:12px;border-top:3px solid transparent;transition:all .3s;min-height:56px;}
+  .acard{background:#161b22;padding:16px 20px;display:flex;flex-direction:column;gap:5px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
+  .acard-icon{font-size:1.4rem}
   .acard-num{font-size:.6875rem;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:.8px}
   .acard-name{font-size:.9rem;font-weight:600;color:#c9d1d9}
   .acard-status{font-size:.75rem;color:#484f58}
@@ -318,44 +319,34 @@ DASHBOARD = """<!DOCTYPE html>
   .sb-links{padding:14px 18px;margin-top:auto}
   .sb-link{display:flex;align-items:center;gap:7px;color:#58a6ff;text-decoration:none;font-size:.8rem;padding:6px 0}
   .sb-link:hover{text-decoration:underline}
-  
-  .acard:nth-child(1) .acard-num{color:#34d399;}
-  .acard:nth-child(1) .acard-name{color:#34d399;font-weight:600;}
-  .acard:nth-child(2) .acard-num{color:#60a5fa;}
-  .acard:nth-child(2) .acard-name{color:#60a5fa;font-weight:600;}
-  .acard:nth-child(3) .acard-num{color:#f97316;}
-  .acard:nth-child(3) .acard-name{color:#f97316;font-weight:600;}
-  .acard:nth-child(4) .acard-num{color:#a78bfa;}
-  .acard:nth-child(4) .acard-name{color:#a78bfa;font-weight:600;}
-  .acard:nth-child(1)
-  .acard:nth-child(2)
-  .acard:nth-child(3)
-  .acard:nth-child(4)
-  @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-  @keyframes pulse-glow{0%,100%{box-shadow:0 0 10px rgba(52,211,153,0.4)}50%{box-shadow:0 0 25px rgba(52,211,153,0.8)}}
-  .robot-bubble{animation:fadeInUp 0.4s ease;}
-  .robot-avatar-wrap{animation:pulse-glow 2s ease-in-out infinite;}
 
-  .acard-icon{width:56px;height:56px;overflow:hidden;border-radius:50% !important;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:4px 0;}
-  .acard-icon img{width:56px;height:56px;object-fit:cover;object-position:center 15%;border-radius:50% !important;transition:transform 0.3s ease;}
+  .acard{background:#161b22;padding:4px 12px;display:flex;flex-direction:row;align-items:center;gap:12px;border-top:3px solid transparent;transition:all .3s}
+  .acard-icon{width:56px;height:56px;overflow:hidden;border-radius:50%;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:4px 0;}
+  .acard-icon img{width:56px;height:56px;object-fit:cover;object-position:center 15%;border-radius:50%;transition:transform 0.3s ease;}
   .acard-icon img:hover{transform:scale(1.08);}
+  .acard:nth-child(1) .acard-num{color:#34d399;} .acard:nth-child(1) .acard-name{color:#34d399;font-weight:600;}
+  .acard:nth-child(2) .acard-num{color:#60a5fa;} .acard:nth-child(2) .acard-name{color:#60a5fa;font-weight:600;}
+  .acard:nth-child(3) .acard-num{color:#f97316;} .acard:nth-child(3) .acard-name{color:#f97316;font-weight:600;}
+  .acard:nth-child(4) .acard-num{color:#a78bfa;} .acard:nth-child(4) .acard-name{color:#a78bfa;font-weight:600;}
+  .acard:nth-child(1) .acard-icon{border-color:#34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);}
+  .acard:nth-child(2) .acard-icon{border-color:#60a5fa;box-shadow:0 0 12px rgba(96,165,250,0.5);}
+  .acard:nth-child(3) .acard-icon{border-color:#f97316;box-shadow:0 0 12px rgba(249,115,22,0.5);}
+  .acard:nth-child(4) .acard-icon{border-color:#a78bfa;box-shadow:0 0 12px rgba(167,139,250,0.5);}
+  .report-dl{display:none;padding:8px 16px;background:#161b22;border-top:1px solid #21262d;gap:8px;flex-wrap:wrap;align-items:center;}
+  .report-dl.show{display:flex;}
+  .report-dl span{color:#34d399;font-size:0.78rem;font-weight:600;}
+  .rdl{padding:6px 12px;border-radius:6px;cursor:pointer;font-size:0.75rem;font-weight:600;border:none;transition:all 0.2s;}
+  .rdl:hover{transform:translateY(-1px);}
+  .rdl-pdf{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;}
+  .rdl-txt{background:#1a3a2a;color:#34d399;border:1px solid #34d399;}
+  .rdl-html{background:#1a1f2e;color:#60a5fa;border:1px solid #60a5fa;}
+  .rdl-csv{background:#2a1a2e;color:#a78bfa;border:1px solid #a78bfa;}
+  .rdl-json{background:#2a2a1a;color:#f97316;border:1px solid #f97316;}
+  .rdl-copy{background:#1a2a1a;color:#34d399;border:1px solid #34d399;}
+  @keyframes eyeGlow{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-  .download-bar{display:none;padding:10px 16px;background:#0d1117;border-top:1px solid #21262d;gap:10px;flex-wrap:wrap;}
-  .download-bar.visible{display:flex;}
-  .dl-btn{padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;border:none;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
-  .dl-btn-pdf{background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;}
-  .dl-btn-txt{background:#1a3a2a;color:#34d399;border:1px solid #34d399;}
-  .dl-btn-copy{background:#1a1f2e;color:#60a5fa;border:1px solid #60a5fa;}
-  .dl-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(52,211,153,0.3);}
-  
-  .dl-bar{display:none;padding:8px 16px;background:#0d1117;border-top:1px solid #21262d;gap:8px;align-items:center;flex-wrap:wrap;}
-  .dl-bar.show{display:flex;}
-  .dl-btn{padding:7px 14px;border-radius:7px;cursor:pointer;font-size:0.8rem;font-weight:600;border:none;transition:all 0.2s;}
-  .dl-btn-pdf{background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;}
-  .dl-btn-txt{background:#1a3a2a;color:#34d399;border:1px solid #34d399;}
-  .dl-btn-copy{background:#1a1f2e;color:#60a5fa;border:1px solid #60a5fa;}
-  .dl-btn:hover{transform:translateY(-1px);}
-</style>
+  </style>
 </head>
 <body>
 
@@ -409,6 +400,7 @@ DASHBOARD = """<!DOCTYPE html>
         <h2 style="color:#34d399;font-size:1rem;margin-bottom:6px">🌱 Welcome to GreenOps AI Dashboard</h2>
         <p style="font-size:0.78rem;color:#6ee7b7">Click <strong style="color:#3fb950">Run Demo</strong> to scan a simulated GCP project or <strong style="color:#58a6ff">Run Real GCP</strong> to scan your actual cloud.</p>
         <div style="font-size:0.7rem;color:#34d399;margin-top:6px;opacity:0.7">Powered by Google ADK + Gemini 2.5 Pro ✨</div>
+<div class="report-dl" id="report-dl"><span>Download Report:</span><button class="rdl rdl-pdf" onclick="rdlPDF()">PDF</button><button class="rdl rdl-txt" onclick="rdlTXT()">TXT</button><button class="rdl rdl-html" onclick="rdlHTML()">HTML</button><button class="rdl rdl-csv" onclick="rdlCSV()">CSV</button><button class="rdl rdl-json" onclick="rdlJSON()">JSON</button><button class="rdl rdl-copy" id="rdl-copy" onclick="rdlCopy()">Copy</button></div>
       </div>
     </div>
   </div>
@@ -420,7 +412,7 @@ DASHBOARD = """<!DOCTYPE html>
       <div class="sb-title">Run Pipeline</div>
       <button class="btn btn-demo" id="btn-demo" onclick="run('demo')">🧪 Run Demo Mode</button>
       <button class="btn btn-real" id="btn-real" onclick="run('real')">☁️ Run Real GCP</button>
-      <button class="btn-cfg" onclick="openPanel()" style="background:#1a3a2a;color:#34d399;border:1px solid #34d399;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;margin-top:8px;width:100%;">&#9881; Configure GCP</button>
+      <button onclick="openPanel()" style="background:#1a3a2a;color:#34d399;border:1px solid #34d399;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:0.82rem;font-weight:600;margin-top:8px;width:100%;">&#9881; Configure GCP</button>
       <div class="model-pill">✨ Model: <b>gemini-2.5-pro</b></div>
     </div>
 
@@ -523,7 +515,7 @@ DASHBOARD = """<!DOCTYPE html>
     else if (d.type === 'done') {
       if (activeAgent) markDone(activeAgent);
       activeAgent = null;
-      setStatus('done', '✅ Pipeline complete');
+      showReportDl(); setStatus('done', '✅ Pipeline complete');
       setBtns(false);
       print(`<div class="t-separator" style="margin-top:12px">─────────────────────────────────────────────────</div>`);
       print(`<div class="t-timestamp">[${d.time}]  ✅ Done — full report saved to output/</div>`);
@@ -739,262 +731,27 @@ DASHBOARD = """<!DOCTYPE html>
     frame();
   })();
 </script>
-
-  <div style="text-align:center;padding:14px;color:#484f58;font-size:0.75rem;border-top:1px solid #21262d;margin-top:8px;">Built by <strong style="color:#34d399;">Raghu Putta</strong> &nbsp;|&nbsp; <a href="https://github.com/raghu-putta/greenops-agent" target="_blank" style="color:#58a6ff;text-decoration:none;">&#9733; GitHub</a> &nbsp;|&nbsp; <a href="https://greenops-dashboard-845589445410.us-central1.run.app" target="_blank" style="color:#58a6ff;text-decoration:none;">&#127760; Live Demo</a> &nbsp;|&nbsp; <span style="color:#34d399;">v2.0</span> &nbsp;|&nbsp; Powered by <span style="color:#34d399;">Google ADK + Gemini 2.5 Pro</span></div>
-
-
-<div id="gcp-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);justify-content:center;align-items:center;">
-  <div style="background:#0d1117;border:1px solid #34d399;border-radius:16px;padding:0;width:480px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 0 40px rgba(52,211,153,0.2);">
-    <div style="background:linear-gradient(135deg,#0a1628,#0d2818);border-bottom:1px solid #1e3a2a;padding:20px 24px;border-radius:16px 16px 0 0;position:sticky;top:0;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="color:#34d399;margin:0;font-size:1.1rem;">&#9881; Configure GCP</h2>
-        <button onclick="closePanel()" style="background:#1a1f2e;border:1px solid #30363d;color:#8b949e;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;">&#x2715;</button>
-      </div>
-      <div style="background:#161b22;border-radius:10px;padding:10px;border:1px solid #21262d;text-align:center;">
-        <p style="color:#34d399;font-size:0.7rem;margin:0;text-transform:uppercase;letter-spacing:2px;font-weight:600;">&#9733; Your GreenOps AI Assistant &#9733;</p>
-      </div>
-    </div>
-    <div style="padding:16px 24px 0;">
-      <div style="background:#161b22;border:1px solid #21262d;border-radius:16px 16px 16px 4px;padding:16px;margin-bottom:4px;">
-        <div style="display:flex;align-items:flex-start;gap:14px;">
-          <div style="flex-shrink:0;position:relative;width:56px;height:56px;">
-            <div id="bot-glow" style="position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.4),transparent);animation:eyeGlow 2s ease-in-out infinite;"></div>
-            <div style="width:56px;height:56px;border-radius:50%;border:2px solid #34d399;background:#0d1117;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;z-index:1;">&#129302;</div>
-          </div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-              <span style="color:#34d399;font-size:0.72rem;font-weight:700;letter-spacing:1px;">ALEX</span>
-              <span style="background:#34d399;color:#0a1a0f;font-size:0.6rem;padding:1px 6px;border-radius:4px;font-weight:700;">AI</span>
-            </div>
-            <div id="bot-msg" style="color:#c9d1d9;font-size:0.85rem;line-height:1.6;min-height:48px;"></div>
-            <span id="bot-cursor" style="display:inline-block;width:2px;height:14px;background:#34d399;margin-left:2px;animation:blink 0.7s step-end infinite;vertical-align:middle;"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div style="padding:20px 24px;">
-      <div style="margin-bottom:14px;">
-        <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#10024; Gemini API Key *</label>
-        <div style="position:relative;">
-          <input type="password" id="cfg-api-key" placeholder="AIzaSy..." style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 44px 11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
-          <span onclick="var i=document.getElementById('cfg-api-key');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#6e7681;">&#128065;</span>
-        </div>
-        <small style="color:#6e7681;font-size:0.72rem;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small>
-      </div>
-      <div style="margin-bottom:14px;">
-        <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#9729; GCP Project ID *</label>
-        <input type="text" id="cfg-project-id" placeholder="my-project-123" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
-        <small style="color:#6e7681;font-size:0.72rem;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small>
-      </div>
-      <div style="margin-bottom:14px;">
-        <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#127758; GCP Region</label>
-        <select id="cfg-region" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;cursor:pointer;">
-          <option value="us-central1">us-central1 - Iowa, USA</option>
-          <option value="us-east1">us-east1 - South Carolina, USA</option>
-          <option value="us-west1">us-west1 - Oregon, USA</option>
-          <option value="europe-west1">europe-west1 - Belgium</option>
-          <option value="europe-west2">europe-west2 - London, UK</option>
-          <option value="asia-east1">asia-east1 - Taiwan</option>
-          <option value="asia-south1">asia-south1 - Mumbai, India</option>
-          <option value="australia-southeast1">australia-southeast1 - Sydney</option>
-        </select>
-      </div>
-      <div style="margin-bottom:20px;">
-        <label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#128205; GCP Zone</label>
-        <input type="text" id="cfg-zone" placeholder="us-central1-a" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='#30363d'"/>
-        <small style="color:#6e7681;font-size:0.72rem;">Usually region + -a e.g. us-central1-a</small>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;">
-        <button onclick="savePanelCfg()" style="flex:1;background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;border:none;padding:13px;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">Save and Close</button>
-        <button onclick="testPanelConn()" style="flex:1;background:transparent;color:#34d399;border:1.5px solid #34d399;padding:13px;border-radius:10px;font-weight:600;cursor:pointer;font-size:0.9rem;">Test Connection</button>
-      </div>
-      <p style="color:#484f58;font-size:0.72rem;text-align:center;margin:0;">Stored in browser session only. Never sent to our servers.</p>
-    </div>
-  </div>
-</div>
+<div style="text-align:center;padding:14px;color:#484f58;font-size:0.75rem;border-top:1px solid #21262d;">Built by <strong style="color:#34d399;">Raghu Putta</strong> &nbsp;|&nbsp; <a href="https://github.com/raghu-putta/greenops-agent" target="_blank" style="color:#58a6ff;text-decoration:none;">&#9733; GitHub</a> &nbsp;|&nbsp; <a href="https://greenops-dashboard-845589445410.us-central1.run.app" target="_blank" style="color:#58a6ff;text-decoration:none;">&#127760; Live Demo</a> &nbsp;|&nbsp; <span style="color:#34d399;">v2.0</span> &nbsp;|&nbsp; Powered by <span style="color:#34d399;">Google ADK + Gemini 2.5 Pro</span></div>
+<div id="gcp-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);justify-content:center;align-items:center;"><div style="background:#0d1117;border:1px solid #34d399;border-radius:16px;width:480px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 0 40px rgba(52,211,153,0.2);"><div style="background:linear-gradient(135deg,#0a1628,#0d2818);padding:20px 24px;border-radius:16px 16px 0 0;border-bottom:1px solid #1e3a2a;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="color:#34d399;margin:0;font-size:1.1rem;">&#9881; Configure GCP</h2><button onclick="closePanel()" style="background:#1a1f2e;border:1px solid #30363d;color:#8b949e;width:32px;height:32px;border-radius:8px;cursor:pointer;">X</button></div><div style="background:#161b22;border-radius:10px;padding:10px;border:1px solid #21262d;text-align:center;"><p style="color:#34d399;font-size:0.7rem;margin:0;text-transform:uppercase;letter-spacing:2px;font-weight:600;">&#9733; Your GreenOps AI Assistant &#9733;</p></div></div><div style="padding:16px 24px 0;"><div style="background:#161b22;border:1px solid #21262d;border-radius:16px 16px 16px 4px;padding:16px;"><div style="display:flex;align-items:flex-start;gap:14px;"><div style="flex-shrink:0;position:relative;width:56px;height:56px;"><div style="position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.4),transparent);animation:eyeGlow 2s ease-in-out infinite;"></div><div style="width:56px;height:56px;border-radius:50%;border:2px solid #34d399;background:#0d1117;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;z-index:1;">&#129302;</div></div><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="color:#34d399;font-size:0.72rem;font-weight:700;letter-spacing:1px;">ALEX</span><span style="background:#34d399;color:#0a1a0f;font-size:0.6rem;padding:1px 6px;border-radius:4px;font-weight:700;">AI</span></div><div id="bot-msg" style="color:#c9d1d9;font-size:0.85rem;line-height:1.6;min-height:48px;"></div><span style="display:inline-block;width:2px;height:14px;background:#34d399;margin-left:2px;animation:blink 0.7s step-end infinite;vertical-align:middle;"></span></div></div></div></div><div style="padding:20px 24px;"><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#10024; Gemini API Key *</label><div style="position:relative;margin-bottom:4px;"><input type="password" id="cfg-api-key" placeholder="AIzaSy..." style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 44px 11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;"/><span onclick="var i=document.getElementById('cfg-api-key');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#6e7681;">&#128065;</span></div><small style="color:#6e7681;font-size:0.72rem;display:block;margin-bottom:14px;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#9729; GCP Project ID *</label><input type="text" id="cfg-project-id" placeholder="my-project-123" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;margin-bottom:4px;"/><small style="color:#6e7681;font-size:0.72rem;display:block;margin-bottom:14px;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#127758; GCP Region</label><select id="cfg-region" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;cursor:pointer;margin-bottom:14px;"><option value="us-central1">us-central1 - Iowa, USA</option><option value="us-east1">us-east1 - South Carolina, USA</option><option value="us-west1">us-west1 - Oregon, USA</option><option value="europe-west1">europe-west1 - Belgium</option><option value="europe-west2">europe-west2 - London, UK</option><option value="asia-east1">asia-east1 - Taiwan</option><option value="asia-south1">asia-south1 - Mumbai, India</option><option value="australia-southeast1">australia-southeast1 - Sydney</option></select><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#128205; GCP Zone</label><input type="text" id="cfg-zone" placeholder="us-central1-a" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;margin-bottom:20px;"/><div style="display:flex;gap:10px;margin-bottom:12px;"><button onclick="savePanelCfg()" style="flex:1;background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;border:none;padding:13px;border-radius:10px;font-weight:700;cursor:pointer;">Save and Close</button><button onclick="testPanelConn()" style="flex:1;background:transparent;color:#34d399;border:1.5px solid #34d399;padding:13px;border-radius:10px;font-weight:600;cursor:pointer;">Test Connection</button></div><p style="color:#484f58;font-size:0.72rem;text-align:center;margin:0;">Stored in browser session only.</p></div></div></div>
 <script>
-var alexQuotes = [
-  "Welcome! The cloud awaits your command. Let us scan for waste and save the planet together!",
-  "Hi there! I am your cloud optimization partner. Fill in your details and let us make your infrastructure greener!",
-  "Yo! Ready to crush some cloud waste? Drop your GCP creds and let us roll!",
-  "Precision is my protocol. Enter your credentials and I shall optimize with surgical accuracy.",
-  "Every idle VM we stop plants a virtual tree. Let us make your cloud carbon-neutral today!",
-  "Your GCP project is waiting to be optimized. Together we can cut costs and carbon emissions!",
-  "The best time to optimize your cloud was yesterday. The second best time is right now!"
-];
-var quoteIdx = 0;
-var typeTimer = null;
-var cycleTimer = null;
-var isTyping = false;
-
-function typeText(text, el, cb) {
-  isTyping = true;
-  el.textContent = "";
-  var i = 0;
-  if (typeTimer) clearInterval(typeTimer);
-  typeTimer = setInterval(function() {
-    if (i < text.length) {
-      el.textContent += text[i];
-      i++;
-    } else {
-      clearInterval(typeTimer);
-      isTyping = false;
-      if (cb) setTimeout(cb, 3000);
-    }
-  }, 28);
-}
-
-function cycleQuote() {
-  var el = document.getElementById("bot-msg");
-  if (!el) return;
-  el.style.opacity = "0";
-  el.style.transition = "opacity 0.4s";
-  setTimeout(function() {
-    quoteIdx = (quoteIdx + 1) % alexQuotes.length;
-    el.style.opacity = "1";
-    typeText(alexQuotes[quoteIdx], el, cycleQuote);
-  }, 400);
-}
-
-function startTypewriter() {
-  var el = document.getElementById("bot-msg");
-  if (!el) return;
-  if (typeTimer) clearInterval(typeTimer);
-  if (cycleTimer) clearTimeout(cycleTimer);
-  quoteIdx = 0;
-  typeText(alexQuotes[0], el, cycleQuote);
-}
-
-function openPanel() {
-  document.getElementById("gcp-panel").style.display = "flex";
-  loadPanelSettings();
-  setTimeout(startTypewriter, 300);
-}
-
-function closePanel() {
-  document.getElementById("gcp-panel").style.display = "none";
-  if (typeTimer) clearInterval(typeTimer);
-}
-
-function savePanelCfg() {
-  var key = document.getElementById("cfg-api-key").value.trim();
-  var proj = document.getElementById("cfg-project-id").value.trim();
-  var region = document.getElementById("cfg-region").value;
-  var zone = document.getElementById("cfg-zone").value.trim() || region + "-a";
-  if (!key || !proj) {
-    if (typeTimer) clearInterval(typeTimer);
-    var el = document.getElementById("bot-msg");
-    el.style.opacity = "0";
-    setTimeout(function() {
-      el.style.opacity = "1";
-      typeText("Oops! API Key and Project ID are both required. Please fill them in!", el, null);
-    }, 300);
-    if (!key) document.getElementById("cfg-api-key").style.borderColor = "#f85149";
-    if (!proj) document.getElementById("cfg-project-id").style.borderColor = "#f85149";
-    return;
-  }
-  sessionStorage.setItem("gops-cfg", JSON.stringify({apiKey:key, projectId:proj, region:region, zone:zone}));
-  if (typeTimer) clearInterval(typeTimer);
-  var el = document.getElementById("bot-msg");
-  el.style.opacity = "0";
-  setTimeout(function() {
-    el.style.opacity = "1";
-    typeText("All set! Your GCP credentials are saved. Ready to scan the cloud!", el, null);
-  }, 300);
-  setTimeout(function() { closePanel(); }, 2500);
-}
-
-function testPanelConn() {
-  if (typeTimer) clearInterval(typeTimer);
-  var el = document.getElementById("bot-msg");
-  el.style.opacity = "0";
-  setTimeout(function() {
-    el.style.opacity = "1";
-    typeText("Testing your connection... hang tight while I check!", el, null);
-  }, 300);
-  fetch("/test-connection", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      apiKey: document.getElementById("cfg-api-key").value.trim(),
-      projectId: document.getElementById("cfg-project-id").value.trim(),
-      region: document.getElementById("cfg-region").value
-    })
-  }).then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (typeTimer) clearInterval(typeTimer);
-    var el = document.getElementById("bot-msg");
-    el.style.opacity = "0";
-    setTimeout(function() {
-      el.style.opacity = "1";
-      typeText(d.success ? "Connection successful! All systems GO! Ready to scan!" : "Connection failed. Please check your API key and Project ID.", el, null);
-    }, 300);
-  }).catch(function() {
-    if (typeTimer) clearInterval(typeTimer);
-    var el = document.getElementById("bot-msg");
-    el.textContent = "Could not reach server. Check your network connection.";
-  });
-}
-
-function loadPanelSettings() {
-  try {
-    var s = JSON.parse(sessionStorage.getItem("gops-cfg") || "{}");
-    if (s.apiKey) document.getElementById("cfg-api-key").value = s.apiKey;
-    if (s.projectId) document.getElementById("cfg-project-id").value = s.projectId;
-    if (s.region) document.getElementById("cfg-region").value = s.region;
-    if (s.zone) document.getElementById("cfg-zone").value = s.zone;
-  } catch(e) {}
-}
-
-window.addEventListener("load", function() { loadPanelSettings(); });
-</script>
-
-<script>
-  function getReportText() {
-    var t = document.getElementById("terminal");
-    return t ? (t.innerText || t.textContent) : "";
-  }
-
-  function downloadTXT() {
-    var text = getReportText();
-    var blob = new Blob([text], {type: "text/plain"});
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "GreenOps_Report_" + new Date().toISOString().split("T")[0] + ".txt";
-    a.click();
-  }
-
-  function downloadPDF() {
-    var text = getReportText();
-    var win = window.open("", "_blank");
-    win.document.write("<html><head><title>GreenOps Report</title>");
-    win.document.write("<style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;line-height:1.6;}");
-    win.document.write("h1{color:#34d399;} .header{color:#34d399;font-size:1.2rem;margin-bottom:20px;}</style></head><body>");
-    win.document.write("<div class=header>&#127807; GreenOps AI Report - " + new Date().toLocaleDateString() + "</div>");
-    win.document.write("<pre>" + text.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</pre>");
-    win.document.write("<script>
-function dlTXT(){var t=document.getElementById("terminal");var txt=t?t.innerText:"";var b=new Blob([txt],{type:"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_Report_"+new Date().toISOString().split("T")[0]+".txt";a.click();}
-function dlPDF(){var t=document.getElementById("terminal");var txt=t?t.innerText:"";var w=window.open("","_blank");w.document.write("<html><head><title>GreenOps Report</title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;line-height:1.6;}h2{color:#34d399;}</style></head><body><h2>&#127807; GreenOps AI Report - "+new Date().toLocaleDateString()+"</h2><pre>"+txt.replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</pre></body></html>");w.document.close();setTimeout(function(){w.print();},500);}
-function dlCopy(){var t=document.getElementById("terminal");var txt=t?t.innerText:"";navigator.clipboard.writeText(txt).then(function(){var b=document.querySelector(".dl-btn-copy");if(b){b.textContent="Copied!";setTimeout(function(){b.innerHTML="&#128203; Copy";},2000);}});}
-function showDlBar(){var b=document.getElementById("dl-bar");if(b)b.classList.add("show");}
-</script>
-</body></html>");
-    win.document.close();
-    win.print();
-  }
-
-  function copyReport() {
-    var text = getReportText();
-    navigator.clipboard.writeText(text).then(function() {
-      var btn = document.querySelector(".dl-btn-copy");
-      if (btn) { btn.textContent = "Copied!"; setTimeout(function(){ btn.innerHTML = "&#128203; Copy to Clipboard"; }, 2000); }
-    });
-  }
-
-  function showDownloadBar() {
-    var bar = document.getElementById("download-bar");
-    if (bar) bar.classList.add("visible");
-  }
+var alexQ=["Welcome! The cloud awaits your command. Let us scan for waste and save the planet!","Hi there! Fill in your GCP details and let us make your infrastructure greener!","Ready to crush some cloud waste? Drop your GCP creds and let us roll!","Precision is my protocol. Enter credentials and I shall optimize with surgical accuracy.","Every idle VM we stop plants a virtual tree. Let us make your cloud carbon-neutral!","Your GCP project is waiting to be optimized. Let us cut costs and carbon together!"];
+var qIdx=0,typeT=null;
+function typeText(txt,el,cb){el.textContent="";var i=0;if(typeT)clearInterval(typeT);typeT=setInterval(function(){if(i<txt.length){el.textContent+=txt[i];i++;}else{clearInterval(typeT);if(cb)setTimeout(cb,3000);}},28);}
+function cycleQ(){var el=document.getElementById("bot-msg");if(!el)return;el.style.opacity="0";setTimeout(function(){qIdx=(qIdx+1)%alexQ.length;el.style.opacity="1";typeText(alexQ[qIdx],el,cycleQ);},400);}
+function openPanel(){document.getElementById("gcp-panel").style.display="flex";loadPanelCfg();setTimeout(function(){var el=document.getElementById("bot-msg");if(el){qIdx=0;typeText(alexQ[0],el,cycleQ);}},300);}
+function closePanel(){document.getElementById("gcp-panel").style.display="none";if(typeT)clearInterval(typeT);}
+function savePanelCfg(){var k=document.getElementById("cfg-api-key").value.trim();var p=document.getElementById("cfg-project-id").value.trim();var r=document.getElementById("cfg-region").value;var z=document.getElementById("cfg-zone").value.trim()||r+"-a";if(!k||!p){var el=document.getElementById("bot-msg");if(typeT)clearInterval(typeT);el.textContent="Oops! API Key and Project ID are required!";return;}sessionStorage.setItem("gops-cfg",JSON.stringify({apiKey:k,projectId:p,region:r,zone:z}));if(typeT)clearInterval(typeT);document.getElementById("bot-msg").textContent="All set! GCP credentials saved!";setTimeout(closePanel,1800);}
+function testPanelConn(){if(typeT)clearInterval(typeT);var el=document.getElementById("bot-msg");el.textContent="Testing connection...";fetch("/test-connection",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({apiKey:document.getElementById("cfg-api-key").value.trim(),projectId:document.getElementById("cfg-project-id").value.trim(),region:document.getElementById("cfg-region").value})}).then(function(r){return r.json();}).then(function(d){el.textContent=d.success?"Connection successful! All systems GO!":"Connection failed. Check your credentials.";}).catch(function(){el.textContent="Could not reach server.";});}
+function loadPanelCfg(){try{var s=JSON.parse(sessionStorage.getItem("gops-cfg")||"{}");if(s.apiKey)document.getElementById("cfg-api-key").value=s.apiKey;if(s.projectId)document.getElementById("cfg-project-id").value=s.projectId;if(s.region)document.getElementById("cfg-region").value=s.region;if(s.zone)document.getElementById("cfg-zone").value=s.zone;}catch(e){}}
+function getTxt(){var t=document.getElementById("terminal");return t?t.innerText||t.textContent:"";}
+function rdlTXT(){var b=new Blob([getTxt()],{type:"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".txt";a.click();}
+function rdlPDF(){var w=window.open("","_blank");w.document.write("<!DOCTYPE html><html><head><title>GreenOps Report</title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;line-height:1.7;}h2{color:#34d399;border-bottom:1px solid #34d399;padding-bottom:8px;}</style></head><body><h2>GreenOps AI Report - "+new Date().toLocaleDateString()+"</h2><pre>"+getTxt().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</pre><p style=color:#484f58>Built by Raghu Putta | Google ADK + Gemini 2.5 Pro</p></body></html>");w.document.close();setTimeout(function(){w.print();},600);}
+function rdlHTML(){var h="<!DOCTYPE html><html><head><title>GreenOps Report</title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;}h2{color:#34d399;}</style></head><body><h2>GreenOps AI Report</h2><pre>"+getTxt()+"</pre></body></html>";var b=new Blob([h],{type:"text/html"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".html";a.click();}
+function rdlCSV(){var lines=getTxt().split("\n").filter(function(l){return l.trim();});var rows=lines.map(function(l,i){return (i+1)+","+JSON.stringify(l);});var b=new Blob(["No,Content\n"+rows.join("\n")],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".csv";a.click();}
+function rdlJSON(){var d={title:"GreenOps AI Report",generated:new Date().toISOString(),built_by:"Raghu Putta",content:getTxt().split("\n").filter(function(l){return l.trim();})};var b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".json";a.click();}
+function rdlCopy(){navigator.clipboard.writeText(getTxt()).then(function(){var b=document.getElementById("rdl-copy");if(b){b.textContent="Copied!";setTimeout(function(){b.textContent="Copy";},2000);}});}
+function showReportDl(){var b=document.getElementById("report-dl");if(b)b.classList.add("show");}
+window.addEventListener("load",loadPanelCfg);
 </script>
 </body>
 </html>"""
