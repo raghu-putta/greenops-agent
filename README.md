@@ -1,420 +1,126 @@
-<p align="center">
-  <img src="./greenops-icon-3d.gif" width="150" alt="GreenOps AI"/>
-</p>
-
-<h1 align="center">GreenOps AI Agent</h1>
-
-<p align="center">
-  <b>4-agent AI pipeline that scans GCP for wasted resources, calculates carbon footprint,<br/>
-  and safely optimizes with human approval � built with Google ADK + Gemini 2.5 Pro</b>
-</p>
-
-<p align="center">
-  <a href="https://deploy.cloud.run/?git_repo=https://github.com/raghu-putta/greenops-agent">
-    <img src="https://deploy.cloud.run/button.svg" alt="Run on Google Cloud" height="36"/>
-  </a>
-  &nbsp;
-  <img src="https://img.shields.io/badge/Model-Gemini%202.5%20Pro-4285F4?logo=google&logoColor=white"/>
-  &nbsp;
-  <img src="https://img.shields.io/badge/Built%20with-Google%20ADK-34A853?logo=google-cloud&logoColor=white"/>
-  &nbsp;
-  <img src="https://img.shields.io/badge/Deployed%20on-Cloud%20Run-EA4335?logo=google-cloud&logoColor=white"/>
-  &nbsp;
-  <img src="https://img.shields.io/badge/License-MIT-yellow"/>
-</p>
-
----
 # 🌱 GreenOps AI Agent
 
-**A 4-agent AI pipeline that scans Google Cloud projects for wasted resources, calculates carbon footprint, and executes safe optimizations — built with Google ADK and Gemini.**
+**AI-powered GCP cost optimization and carbon footprint reduction using Google ADK + Gemini 2.5 Pro**
 
-🔗 **Live Demo:** https://greenops-agent-845589445410.us-central1.run.app
-
----
-
-## What It Does
-
-GreenOps automatically finds idle cloud resources that are costing money and emitting CO₂ for no reason — and fixes them safely with human approval.
-
-```
-Carbon Scout → GreenOps Analyzer → Optimization Executor → Report Generator
-```
-
-| Agent | Role |
-|---|---|
-| 🔍 Carbon Scout | Scans GCP for idle VMs, unattached disks, unused IPs |
-| 📊 GreenOps Analyzer | Calculates CO₂ impact and cost waste |
-| ⚡ Optimization Executor | Asks human approval, then executes safe actions |
-| 📋 Report Generator | Produces a full markdown GreenOps report |
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GreenOps%20AI-34d399?style=for-the-badge&logo=google-cloud)](https://greenops-dashboard-845589445410.us-central1.run.app)
+[![GitHub](https://img.shields.io/badge/GitHub-raghu--putta-blue?style=for-the-badge&logo=github)](https://github.com/raghu-putta/greenops-agent)
+[![Gemini](https://img.shields.io/badge/Powered%20by-Gemini%202.5%20Pro-4285F4?style=for-the-badge&logo=google)](https://ai.google.dev/)
+[![Google ADK](https://img.shields.io/badge/Google-ADK-orange?style=for-the-badge&logo=google)](https://google.github.io/adk-docs/)
 
 ---
 
-## Real-World Impact
+## 🤖 What is GreenOps AI?
 
-- Companies waste **30–35% of cloud budget** on idle resources (Gartner)
-- Cloud computing accounts for **~1% of global electricity use**
-- GreenOps finds and eliminates waste automatically
+GreenOps AI is a **4-agent agentic AI pipeline** that automatically scans your Google Cloud Platform (GCP) project for:
 
-**Example findings on a typical GCP project:**
-- 3 idle VMs left running → $87/month wasted → 12.4 kg CO₂/month
-- 2 unattached disks (700 GB) → $28/month wasted
-- 1 unused reserved IP → $7.20/month wasted
-- **Total: $122/month saved, 149 kg CO₂/year eliminated**
+- 💸 **Wasted cloud spend** — idle VMs, unattached disks, unused reserved IPs
+- 🌍 **Carbon emissions** — CO2 footprint from idle resources
+- ⚡ **Optimization opportunities** — rightsizing recommendations from GCP Recommender
+- 📊 **Executive reports** — automated GreenOps report with action plans
 
 ---
 
-## Tech Stack
+## 🏗️ Architecture
 
-- **[Google ADK](https://google.github.io/adk-docs/)** — Agent Development Kit for multi-agent orchestration
-- **[Gemini 2.5 Pro (gemini-2.5-pro)](https://deepmind.google/models/gemini/)** — LLM powering all 4 agents
-- **[Google Gemini API](https://aistudio.google.com/)** — Standard Gemini API (stable, 60 RPM, no 503/404 errors)
-- **[Google Cloud Run](https://cloud.google.com/run)** — Serverless deployment
-- **[FastAPI](https://fastapi.tiangolo.com/)** — Web dashboard with SSE streaming
-- **Google Cloud SDK** — gcloud CLI for GCP resource scanning
-- **Python 3.12+** — core runtime
-- **SequentialAgent** — ADK pipeline: each agent passes context to the next
+```
+┌─────────────────┐    ┌──────────────────┐    ┌───────────────────────┐    ┌──────────────────┐
+│  Carbon Scout   │───▶│ GreenOps Analyzer│───▶│ Optimization Executor │───▶│ Report Generator │
+│  Scans GCP for  │    │ Calculates CO2 & │    │ Executes LOW risk     │    │ Generates full   │
+│  idle resources │    │ cost waste       │    │ actions safely        │    │ GreenOps report  │
+└─────────────────┘    └──────────────────┘    └───────────────────────┘    └──────────────────┘
+```
+
+**Tech Stack:**
+- 🤖 **Google ADK** — Multi-agent orchestration
+- ✨ **Gemini 2.5 Pro** — AI reasoning for all 4 agents
+- ⚡ **FastAPI** — Backend API with SSE streaming
+- 🚀 **Cloud Run** — Serverless deployment
+- 🎨 **Vanilla JS** — Real-time dashboard UI
 
 ---
 
-## Architecture
+## 🚀 Live Demo
 
-```
-Browser (SSE) ←── FastAPI Dashboard ←── SequentialAgent Pipeline
-                        │
-                   Cloud Run (GCP)
-                        │
-              ┌─────────┴──────────┐
-              │  Google Gemini API │
-              │  gemini-2.5-pro  │
-              └────────────────────┘
-```
+👉 **[https://greenops-dashboard-845589445410.us-central1.run.app](https://greenops-dashboard-845589445410.us-central1.run.app)**
 
-### Reliability Features
-- **Exponential backoff retry** — 5 retries with 20s → 40s → 80s → 120s → 180s delays
-- **503 UNAVAILABLE handling** — auto-retries when Gemini API is under high demand
-- **429 RESOURCE_EXHAUSTED handling** — extracts retryDelay from API response and waits exact amount
-- **Paid Gemini API** — eliminates free-tier quota limits entirely (1000+ RPM)
+Click **Run Demo Mode** to see the 4 agents in action with simulated GCP data.
 
 ---
 
-## Project Structure
+## ⚙️ Setup & Deployment
 
-```
-greenops-agent/
-├── agents/
-│   ├── greenops_pipeline.py       # Real pipeline (connects to live GCP)
-│   └── greenops_pipeline_demo.py  # Demo pipeline (simulated resources)
-├── tools/
-│   ├── gcp_tools.py               # Real GCP tools via gcloud CLI
-│   └── gcp_tools_demo.py          # Demo tools with realistic mock data
-├── output/                        # Generated GreenOps reports (auto-created, not committed)
-├── app.py                         # FastAPI web dashboard with SSE streaming
-├── scheduler.py                   # Cloud Scheduler integration (Gmail + Slack alerts)
-├── main.py                        # Run real pipeline (CLI)
-├── main_demo.py                   # Run demo pipeline (CLI)
-├── test_api.py                    # Test Gemini API connectivity
-└── .env                           # ⚠️ NOT committed — secrets stay local
-```
+### Prerequisites
+- Python 3.11+
+- Google Cloud SDK
+- Gemini API Key (free at [aistudio.google.com/apikey](https://aistudio.google.com/apikey))
+- GCP Project with billing enabled
 
-### 🔒 Secret Protection (.gitignore)
-
-Sensitive files are **never committed to GitHub**:
-
-```
-# .gitignore — these are excluded from git
-.env                  ← your API key & GCP project ID
-*.json                ← service account keys
-gcp-sa-key.json       ← GCP credentials
-output/               ← generated reports
-__pycache__/          ← Python cache
-.venv/                ← virtual environment
-```
-
----
-
-## Quick Start
-
-### 1. Clone and install
+### Local Setup
 
 ```bash
 git clone https://github.com/raghu-putta/greenops-agent.git
 cd greenops-agent
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # Mac/Linux
 pip install -r requirements.txt
-```
-
-### 2. Configure `.env`
-
-```env
-GCP_PROJECT_ID=your-gcp-project-id
-GCP_REGION=us-central1
-GCP_ZONE=us-central1-a
-CARBON_FACTOR_KWH=0.000233
-
-# Standard Gemini API (recommended — stable, 60 RPM, no 503/404 errors)
-GOOGLE_GENAI_USE_VERTEXAI=0
-GOOGLE_API_KEY=your-gemini-api-key
-```
-
-### 3. Authenticate with GCP
-
-```bash
-gcloud auth application-default login
-gcloud config set project YOUR_PROJECT_ID
-```
-
-### 4. Run the demo (no GCP needed)
-
-```bash
-python main_demo.py
-```
-
-### 5. Run against your real GCP project
-
-```bash
-python main.py
-```
-
-### 6. Run the web dashboard locally
-
-```bash
+cp .env.example .env
+# Edit .env with your credentials
 uvicorn app:app --reload --port 8000
 ```
-Open: http://localhost:8000
 
----
-
-## Deploy to Cloud Run
+### Deploy to Cloud Run
 
 ```bash
-gcloud run deploy greenops-agent \
-  --source . \
+gcloud builds submit --tag gcr.io/YOUR_PROJECT/greenops-dashboard .
+gcloud run deploy greenops-dashboard \
+  --image gcr.io/YOUR_PROJECT/greenops-dashboard \
   --region us-central1 \
-  --project YOUR_PROJECT_ID \
-  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=0,GOOGLE_API_KEY=YOUR_GEMINI_API_KEY,GCP_PROJECT_ID=YOUR_PROJECT_ID
+  --allow-unauthenticated \
+  --set-env-vars GOOGLE_API_KEY=your-key,GCP_PROJECT_ID=your-project
 ```
 
 ---
 
-## Safety Design
+## 🔑 Environment Variables
 
-The Optimization Executor follows strict rules:
-
-| Risk Level | Action | Agent Behavior |
+| Variable | Description | Required |
 |---|---|---|
-| 🟢 LOW | Stop idle VMs, release unused IPs | **Lists and asks human approval first** |
-| 🟡 MEDIUM | Resize active VMs | Lists but does NOT execute — marked for manual review |
-| 🔴 HIGH | Delete databases, modify production | **NEVER executes** — escalates with full details |
-
-No action is taken without explicit human confirmation.
-
----
-
-## Live Demo Output
-
-Below is the **actual output** from running `python main_demo.py` — all 4 agents running in sequence:
+| `GOOGLE_API_KEY` | Gemini API Key | ✅ |
+| `GCP_PROJECT_ID` | Your GCP Project ID | ✅ |
+| `GCP_REGION` | GCP Region (default: us-central1) | ✅ |
+| `GCP_ZONE` | GCP Zone (default: us-central1-a) | ✅ |
+| `GOOGLE_GENAI_USE_VERTEXAI` | Set to 0 for Gemini API | ✅ |
+| `CARBON_FACTOR_KWH` | Carbon factor (default: 0.000233) | Optional |
 
 ---
 
-### 🚀 Pipeline Startup
+## 🌿 Agent Details
 
-```
-============================================================
-  🌱 GreenOps Agentic AI — DEMO MODE
-  Simulated GCP project with idle resources
-  Time: 2026-05-26 05:44:13
-============================================================
+### Agent 1: Carbon Scout 🔍
+Scans GCP project for idle VMs, unattached disks, unused reserved IPs, and rightsizing recommendations.
 
-  Simulated resources:
-  • 3 idle VMs (ml-training, staging-api, data-pipeline)
-  • 2 unattached disks (500GB + 200GB)
-  • 1 unused reserved IP
-  • 1 rightsizing recommendation
+### Agent 2: GreenOps Analyzer 📊
+Calculates carbon footprint and cost waste from Carbon Scout findings. Classifies risks (LOW/MEDIUM/HIGH).
 
-------------------------------------------------------------
-Running pipeline... (this may take 1-2 minutes)
-```
+### Agent 3: Optimization Executor ⚡
+Safely executes LOW risk optimizations after human approval. Never touches HIGH risk resources.
+
+### Agent 4: Report Generator 📋
+Generates comprehensive GreenOps report with executive summary, recommendations, and carbon impact.
 
 ---
 
-### 🔍 Agent 1 — Carbon Scout
+## 👨‍💻 Built By
 
-```
-[CARBON_SCOUT]
-----------------------------------------
-GreenOps Scan Summary for Project: greenops-demo-project
+**Raghu Putta** — Cloud Economist | FinOps Engineer | GreenOps Engineer
 
-1. Total Running Idle VMs (3)
-   • ml-training-server-01  (us-central1-a, n1-standard-8) — Idle 45 days
-   • staging-api-backend     (us-central1-b, n1-standard-4) — Idle 58 days
-   • data-pipeline-worker    (us-central1-a, n1-standard-2) — Idle 35 days
-
-2. Total Unattached Disks (2)
-   • old-postgres-backup-disk  500 GB — backup migrated to GCS
-   • dev-workspace-disk        200 GB — developer left team, disk orphaned
-
-3. Reserved IPs Not In Use (1)
-   • prod-load-balancer-ip-old  34.102.140.239
-     LB decommissioned March 2026 — IP still reserved
-
-4. Rightsizing Recommendations (1)
-   • Change 'analytics-server' from n1-standard-8 → n1-standard-2
-     CPU avg 4% over 30 days — severely over-provisioned
-```
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=flat&logo=linkedin)](https://linkedin.com)
+[![GitHub](https://img.shields.io/badge/GitHub-Follow-black?style=flat&logo=github)](https://github.com/raghu-putta)
 
 ---
 
-### 📊 Agent 2 — GreenOps Analyzer
+## 📄 License
 
-```
-[GREENOPS_ANALYZER]
-----------------------------------------
-GreenOps Analysis Report for Project: greenops-demo-project
-
-Environmental Impact
-  • Total CO2 per month : 8.35 kg
-  • Total CO2 per year  : 0.10 tons
-
-Estimated Monthly Cost Waste
-  • Idle VMs          : $30.00  (3 VMs × $10/VM/month)
-  • Unattached Disks  : $28.00  (700 GB × $0.04/GB/month)
-  • Reserved IPs      : $ 7.20  (1 IP × $7.20/IP/month)
-  ─────────────────────────────────────
-  • TOTAL WASTE       : $65.20/month
-
-Priority-Ranked Action List
-  🟢 LOW RISK
-     1. Stop ml-training-server-01  (idle 45 days)
-     2. Stop staging-api-backend    (idle 58 days)
-     3. Stop data-pipeline-worker   (idle 35 days)
-     4. Release prod-load-balancer-ip-old
-     5. Delete old-postgres-backup-disk (500 GB)
-     6. Delete dev-workspace-disk   (200 GB)
-
-  🟡 MEDIUM RISK (manual review required)
-     1. Resize analytics-server: n1-standard-8 → n1-standard-2
-        Estimated savings: $87/month
-
-  🔴 HIGH RISK
-     None identified.
-```
+MIT License — feel free to use, modify and distribute.
 
 ---
 
-### ⚡ Agent 3 — Optimization Executor
-
-```
-[OPTIMIZATION_EXECUTOR]
-----------------------------------------
-I have found the following LOW risk actions.
-Do you approve executing these? (yes/no)
-
-  1. Stop ml-training-server-01   (Zone: us-central1-a)
-  2. Stop staging-api-backend     (Zone: us-central1-b)
-  3. Stop data-pipeline-worker    (Zone: us-central1-a)
-  4. Release prod-load-balancer-ip-old (34.102.140.239)
-  5. Delete old-postgres-backup-disk   (Zone: us-central1-a)
-  6. Delete dev-workspace-disk         (Zone: us-central1-b)
-
-MEDIUM Risk Actions — Pending Manual Review:
-  • Resize analytics-server: n1-standard-8 → n1-standard-2
-    Estimated savings: $87/month
-
-HIGH Risk Actions: None identified.
-```
-
----
-
-### 📋 Agent 4 — Report Generator
-
-```
-[REPORT_GENERATOR]
-----------------------------------------
-# GreenOps AI Report
-Project   : greenops-demo-project
-Date      : 2026-05-26
-Generated : GreenOps Agentic AI Pipeline (DEMO MODE)
-
-## Executive Summary
-The GreenOps analysis identified significant optimization opportunities:
-3 idle VMs, 2 unattached disks, 1 unused reserved IP, and 1 rightsizing
-recommendation. Low-risk actions were executed, saving $65.20/month
-and 8.35 kg CO₂/month.
-
-## Resources Scanned
-  Running VMs            : 3 — ml-training-server-01, staging-api-backend, data-pipeline-worker
-  Unattached Disks       : 2 — 700 GB total
-  Reserved IPs not in use: 1
-  Rightsizing recommendations: 1
-
-## Carbon Impact
-  Monthly CO2 savings : 8.35 kg
-  Annual CO2 savings  : 0.10 tons
-  Equivalent to       : 5 trees planted / 250 car miles offset
-
-## Cost Savings
-  Monthly savings : $65.20
-  Annual savings  : $782.40
-
-## Actions Taken
-  ✅ Stopped  ml-training-server-01  (us-central1-a)
-  ✅ Stopped  staging-api-backend    (us-central1-b)
-  ✅ Stopped  data-pipeline-worker   (us-central1-a)
-  ✅ Released prod-load-balancer-ip-old (34.102.140.239)
-  ✅ Deleted  old-postgres-backup-disk  (us-central1-a)
-  ✅ Deleted  dev-workspace-disk        (us-central1-b)
-
-## Pending Human Review (Medium Risk)
-  • Resize analytics-server: n1-standard-8 → n1-standard-2
-    Manual validation required — active resource
-
-## Recommendations for Next 30 Days
-  1. Approve rightsizing for analytics-server ($87/month savings)
-  2. Set automated shutdown schedules for non-production VMs
-  3. Schedule monthly scans for orphaned disks and unused IPs
-  4. Migrate remaining pipelines to Cloud Run (serverless)
-  5. Tag all resources with team/project labels for better tracking
-
-============================================================
-  🌱 GreenOps Demo Pipeline Complete
-============================================================
-✅ Full report saved to: output/greenops_DEMO_report_20260526_054442.md
-```
-
----
-
-## Built With
-
-Built by **Raghu Putta** using Google ADK + Gemini 2.5 Pro.
-
----
-
-## License
-
-MIT License — free to use, modify, and distribute.
-
----
-
-## Deploy Your Own Instance
-
-### Option A - One-Click Deploy
-Click the Run on Google Cloud button above.
-
-### Option B - Manual Deploy
-git clone https://github.com/raghu-putta/greenops-agent
-cd greenops-agent
-cp .env.example .env
-pip install -r requirements.txt
-python app.py
-
-### Option C - Settings Panel
-1. Open the live dashboard
-2. Click Configure GCP button
-3. Enter your GCP Project ID and Gemini API Key
-4. Click Test Connection
-5. Click Run Real GCP
-
-Get free Gemini API key: https://aistudio.google.com/apikey
-Find GCP Project ID: https://console.cloud.google.com
+*Built with ❤️ using Google ADK + Gemini 2.5 Pro*
