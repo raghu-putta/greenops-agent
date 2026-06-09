@@ -263,7 +263,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   /* ── Agent cards ── */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
-  .acard{background:#161b22;padding:16px 20px;display:flex;flex-direction:column;gap:5px;border-top:3px solid transparent;transition:all .3s}
+  .acard{background:#161b22;padding:6px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
   .acard-icon{font-size:1.4rem}
@@ -707,6 +707,7 @@ DASHBOARD = """<!DOCTYPE html>
 </script>
 
   <div style="text-align:center;padding:14px;color:#484f58;font-size:0.75rem;border-top:1px solid #21262d;margin-top:8px;">Built by <strong style="color:#34d399;">Raghu Putta</strong> &nbsp;|&nbsp; <a href="https://github.com/raghu-putta/greenops-agent" target="_blank" style="color:#58a6ff;text-decoration:none;">&#9733; GitHub</a> &nbsp;|&nbsp; <a href="https://greenops-dashboard-845589445410.us-central1.run.app" target="_blank" style="color:#58a6ff;text-decoration:none;">&#127760; Live Demo</a> &nbsp;|&nbsp; <span style="color:#34d399;">v2.0</span> &nbsp;|&nbsp; Powered by <span style="color:#34d399;">Google ADK + Gemini 2.5 Pro</span></div>
+<div id="gcp-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;"><div style="background:#0d1117;border:1px solid #34d399;border-radius:12px;padding:24px;width:400px;"><h3 style="color:#34d399;margin:0;">Configure GCP</h3><button onclick="document.getElementById(chr(39)gcp-panelchr(39)).style.display=chr(39)nonechr(39)" style="background:transparent;border:none;color:#8b949e;cursor:pointer;">X</button><label style="color:#34d399;font-size:0.82rem;">Gemini API Key</label><input type="password" id="cfg-key" placeholder="AIzaSy..." style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px;border-radius:8px;margin-bottom:12px;box-sizing:border-box;"/><label style="color:#34d399;font-size:0.82rem;">GCP Project ID</label><input type="text" id="cfg-proj" placeholder="my-project-123" style="width:100%;background:#161b22;border:1px solid #30363d;color:#e6edf3;padding:10px;border-radius:8px;margin-bottom:16px;box-sizing:border-box;"/><button onclick="var k=document.getElementById(chr(39)cfg-keychr(39)).value.trim();var p=document.getElementById(chr(39)cfg-projchr(39)).value.trim();if(!k||!p){alert(chr(39)Fill all fieldschr(39));}else{sessionStorage.setItem(chr(39)gops-cfgchr(39),JSON.stringify({apiKey:k,projectId:p}));document.getElementById(chr(39)gcp-panelchr(39)).style.display=chr(39)nonechr(39);alert(chr(39)Saved!chr(39));}" style="width:100%;background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;">Save and Close</button></div></div>
 </body>
 </html>"""
 
