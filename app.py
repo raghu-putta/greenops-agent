@@ -26,7 +26,6 @@ app = FastAPI(title="GreenOps AI Dashboard")
 
 # ── Global state ──────────────────────────────────────────────────────────────
 pipeline_status = {"running": False, "complete": False}
-output_log = []  # stores all pipeline events for polling
 _sse_queues: list = []
 
 
@@ -83,7 +82,6 @@ def _retry_delay_seconds(e: Exception, attempt: int) -> int:
 async def run_pipeline(mode: str):
     global pipeline_status
     pipeline_status = {"running": True, "complete": False}
-    output_log.clear()  # clear previous run
 
     if mode == "demo":
         from agents.greenops_pipeline_demo import greenops_pipeline_demo as pipeline
@@ -185,15 +183,10 @@ async def stream():
     _sse_queues.append(q)
 
     async def generator():
-        for buffered in list(_event_buffer):
-            yield f"data: {buffered}\n\n"
         try:
             while True:
-                try:
-                    msg = await asyncio.wait_for(q.get(), timeout=20.0)
-                    yield f"data: {msg}\n\n"
-                except asyncio.TimeoutError:
-                    yield ": heartbeat\n\n"
+                msg = await q.get()
+                yield f"data: {msg}\n\n"
         except asyncio.CancelledError:
             pass
         finally:
@@ -220,16 +213,6 @@ async def run(mode: str):
 @app.get("/status")
 async def status():
     return pipeline_status
-
-@app.get("/poll")
-async def poll(since: int = 0):
-    """Polling endpoint - returns all events since index 'since'"""
-    return {
-        "events": output_log[since:],
-        "total": len(output_log),
-        "running": pipeline_status["running"],
-        "complete": pipeline_status["complete"]
-    }
 
 
 @app.post("/scheduled-scan")
@@ -500,46 +483,13 @@ DASHBOARD = """<!DOCTYPE html>
   let es = null;
 
   // ── SSE connection ──────────────────────────────────────────────────────────
-  var pollIndex = 0;
-  var pollTimer = null;
-  var isPolling = false;
-
-  function startPolling() {
-    pollIndex = 0;
-    isPolling = true;
-    if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(doPoll, 1500);
-    doPoll();
-  }
-
-  function stopPolling() {
-    isPolling = false;
-    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  }
-
-  function doPoll() {
-    fetch("/poll?since=" + pollIndex)
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var events = data.events || [];
-        for (var i = 0; i < events.length; i++) {
-          onEvent({data: JSON.stringify(events[i])});
-        }
-        pollIndex = data.total || pollIndex;
-        if (!data.running && data.complete) {
-          stopPolling();
-        }
-      })
-      .catch(function(err){ console.log("Poll error:", err); });
-  }
-
   function connect() {
-    // Use polling instead of SSE - more reliable on Cloud Run
-    console.log("Using polling mode");
+    es = new EventSource('/stream');
+    es.onmessage = onEvent;
+    es.onerror   = () => setTimeout(connect, 2000);
   }
 
   function onEvent(e) {
-    console.log('SSE EVENT:', e.data);
     const d = JSON.parse(e.data);
 
     if (d.type === 'start') {
@@ -554,12 +504,12 @@ DASHBOARD = """<!DOCTYPE html>
     else if (d.type === 'agent') {
       const key = d.agent; // e.g. "CARBON_SCOUT"
       const info = AGENTS[key];
-      // show all agent output
+      if (!info) return; // skip orchestrator
 
-      if (activeAgent && activeAgent !== key && AGENTS[activeAgent]) markDone(activeAgent);
+      if (activeAgent && activeAgent !== key) markDone(activeAgent);
 
       if (activeAgent !== key) {
-        if (info) markActive(key);
+        markActive(key);
         activeAgent = key;
         print(`<div class="t-agent-hdr">[ ${d.agent} ]   ${d.time}</div>`);
       }
@@ -604,30 +554,10 @@ DASHBOARD = """<!DOCTYPE html>
 
   // ── Run ─────────────────────────────────────────────────────────────────────
   function run(mode) {
-    var overlay = document.getElementById("spinner-overlay");
-    var txt = document.getElementById("spinner-text");
-    if (overlay) overlay.classList.add("active");
-    if (txt) txt.textContent = mode === "demo" ? "Starting Demo Pipeline..." : "Connecting to GCP...";
-    var terminal = document.getElementById("terminal");
-    if (terminal) {
-      terminal.innerHTML = "";
-      var msg = document.createElement("div");
-      msg.style.color = "#34d399";
-      msg.style.padding = "8px";
-      msg.textContent = "[ " + new Date().toLocaleTimeString() + " ]  Initializing " + (mode === "demo" ? "Demo" : "Real GCP") + " pipeline...";
-      terminal.appendChild(msg);
-    }
-    startPolling();
-    fetch("/run/" + mode, {method:"POST"})
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if (overlay) overlay.classList.remove("active");
-        if (d.error) alert(d.error);
-      })
-      .catch(function(err){
-        if (overlay) overlay.classList.remove("active");
-        alert("Could not start: " + err);
-      });
+    fetch(`/run/${mode}`, {method:'POST'})
+      .then(r => r.json())
+      .then(d => { if (d.error) alert(d.error); })
+      .catch(err => alert('Could not start pipeline: ' + err));
   }
 
   // ── Terminal helpers ────────────────────────────────────────────────────────
@@ -651,7 +581,7 @@ DASHBOARD = """<!DOCTYPE html>
       const c = document.getElementById('card-' + a.id);
       if (c) c.className = 'acard';
       const s = document.getElementById(a.statusId);
-      if (s) { s.className = 'acard-status'; s.textContent = agentIdleText[a.statusId.replace('-status','')] || 'Scouting'; }
+      if (s) { s.className = 'acard-status'; s.textContent = agentIdleText[id] || 'Idle'; }
     });
     ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
       document.getElementById(id).textContent = '—';
@@ -662,14 +592,14 @@ DASHBOARD = """<!DOCTYPE html>
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard active';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status running'; s.textContent = agentRunText[a.statusId.replace('-status','')] || 'Running...'; }
+    if (s) { s.className = 'acard-status running'; s.textContent = agentRunText[id] || 'Running...'; }
   }
   function markDone(key) {
     const a = AGENTS[key]; if (!a) return;
     const c = document.getElementById('card-' + a.id);
     if (c) c.className = 'acard done';
     const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = agentDoneText[a.statusId.replace('-status','')] || 'Done!'; }
+    if (s) { s.className = 'acard-status done'; s.textContent = agentDoneText[id] || 'Done!'; }
   }
 
   // ── Status bar ──────────────────────────────────────────────────────────────
