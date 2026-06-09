@@ -335,7 +335,7 @@ DASHBOARD = """<!DOCTYPE html>
   .robot-bubble{animation:fadeInUp 0.4s ease;}
   .robot-avatar-wrap{animation:pulse-glow 2s ease-in-out infinite;}
 
-  .acard-icon{width:56px;height:56px;overflow:hidden;border-radius:50% !important;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:-3px 0;}
+  .acard-icon{width:56px;height:56px;overflow:hidden;border-radius:50% !important;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:4px 0;}
   .acard-icon img{width:56px;height:56px;object-fit:cover;object-position:center 15%;border-radius:50% !important;transition:transform 0.3s ease;}
   .acard-icon img:hover{transform:scale(1.08);}
 </style>
