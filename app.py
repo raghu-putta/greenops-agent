@@ -263,7 +263,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   /* ── Agent cards ── */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
-  .acard{background:#161b22;padding:4px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
+  .acard{background:#161b22;padding:10px 12px;display:flex;flex-direction:row;align-items:center;gap:12px;border-top:3px solid transparent;transition:all .3s;min-height:72px;}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
   .acard-num{font-size:.6875rem;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:.8px}
@@ -335,8 +335,9 @@ DASHBOARD = """<!DOCTYPE html>
   .robot-bubble{animation:fadeInUp 0.4s ease;}
   .robot-avatar-wrap{animation:pulse-glow 2s ease-in-out infinite;}
 
-  .acard-icon{width:52px;height:52px;overflow:hidden;border-radius:50% !important;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;margin:-8px 0;}
-  .acard-icon img{width:52px;height:52px;object-fit:cover;object-position:center 15%;border-radius:50% !important;}
+  .acard-icon{width:56px;height:56px;overflow:hidden;border-radius:50% !important;border:2px solid #34d399;box-shadow:0 0 12px rgba(52,211,153,0.5);flex-shrink:0;}
+  .acard-icon img{width:56px;height:56px;object-fit:cover;object-position:center 15%;border-radius:50% !important;transition:transform 0.3s ease;}
+  .acard-icon img:hover{transform:scale(1.08);}
 </style>
 </head>
 <body>
