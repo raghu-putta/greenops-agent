@@ -266,7 +266,6 @@ DASHBOARD = """<!DOCTYPE html>
   .acard{background:#161b22;padding:4px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
-  .acard-icon{font-size:1.4rem}
   .acard-num{font-size:.6875rem;font-weight:600;color:#484f58;text-transform:uppercase;letter-spacing:.8px}
   .acard-name{font-size:.9rem;font-weight:600;color:#c9d1d9}
   .acard-status{font-size:.75rem;color:#484f58}
@@ -319,7 +318,6 @@ DASHBOARD = """<!DOCTYPE html>
   .sb-link{display:flex;align-items:center;gap:7px;color:#58a6ff;text-decoration:none;font-size:.8rem;padding:6px 0}
   .sb-link:hover{text-decoration:underline}
 
-  .acard-icon{width:52px;height:52px;overflow:hidden;border-radius:50%;border:2px solid #34d399;box-shadow:0 0 10px rgba(52,211,153,0.4);flex-shrink:0;}
   .acard-icon img{width:52px;height:52px;object-fit:cover;object-position:center 10%;border-radius:50%;}
   
   .acard:nth-child(1) .acard-num{color:#34d399;}
