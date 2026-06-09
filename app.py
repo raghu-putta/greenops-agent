@@ -263,7 +263,7 @@ DASHBOARD = """<!DOCTYPE html>
 
   /* ── Agent cards ── */
   .agents-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#21262d;border-bottom:1px solid #21262d;flex-shrink:0}
-  .acard{background:#161b22;padding:6px 10px;display:flex;flex-direction:row;align-items:center;gap:10px;border-top:3px solid transparent;transition:all .3s}
+  .acard{background:#161b22;padding:0 10px 0 0;display:flex;flex-direction:row;align-items:stretch;gap:10px;border-top:3px solid transparent;transition:all .3s;overflow:hidden;min-height:64px;}
   .acard.active{background:#1c2128;border-top-color:#f0883e}
   .acard.done{border-top-color:#3fb950}
   .acard-icon{font-size:1.4rem}
