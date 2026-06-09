@@ -705,6 +705,8 @@ DASHBOARD = """<!DOCTYPE html>
     frame();
   })();
 </script>
+
+  <div style="text-align:center;padding:14px;color:#484f58;font-size:0.75rem;border-top:1px solid #21262d;margin-top:8px;">Built by <strong style="color:#34d399;">Raghu Putta</strong> &nbsp;|&nbsp; <a href="https://github.com/raghu-putta/greenops-agent" target="_blank" style="color:#58a6ff;text-decoration:none;">&#9733; GitHub</a> &nbsp;|&nbsp; <a href="https://greenops-dashboard-845589445410.us-central1.run.app" target="_blank" style="color:#58a6ff;text-decoration:none;">&#127760; Live Demo</a> &nbsp;|&nbsp; <span style="color:#34d399;">v2.0</span> &nbsp;|&nbsp; Powered by <span style="color:#34d399;">Google ADK + Gemini 2.5 Pro</span></div>
 </body>
 </html>"""
 
