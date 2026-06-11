@@ -464,294 +464,31 @@ DASHBOARD = """<!DOCTYPE html>
   </div>
 </div>
 
-<script>
-  const AGENTS = {
-    CARBON_SCOUT:         {id:'carbon_scout',       statusId:'cs-status'},
-    GREENOPS_ANALYZER:    {id:'greenops_analyzer',   statusId:'ga-status'},
-    OPTIMIZATION_EXECUTOR:{id:'optimization_executor',statusId:'oe-status'},
-    REPORT_GENERATOR:     {id:'report_generator',    statusId:'rg-status'},
-    // orchestrator events are ignored
-  };
 
-  let activeAgent = null;
-  let es = null;
-
-  // ── SSE connection ──────────────────────────────────────────────────────────
-  function connect() {
-    es = new EventSource('/stream');
-    es.onmessage = onEvent;
-    es.onerror   = () => setTimeout(connect, 2000);
-  }
-
-  function onEvent(e) {
-    const d = JSON.parse(e.data);
-
-    if (d.type === 'start') {
-      clearTerminal(); resetCards();
-      setBtns(true);
-      setStatus('running', `Running ${d.mode === 'demo' ? '🧪 Demo' : '☁️ Real GCP'} pipeline...`);
-      print(`<div class="t-timestamp">[${d.time}]  Pipeline started — ${d.mode} mode</div>`);
-      print(`<div class="t-separator">─────────────────────────────────────────────────</div>`);
-      activeAgent = null;
-    }
-
-    else if (d.type === 'agent') {
-      const key = d.agent; // e.g. "CARBON_SCOUT"
-      const info = AGENTS[key];
-      if (!info) return; // skip orchestrator
-
-      if (activeAgent && activeAgent !== key) markDone(activeAgent);
-
-      if (activeAgent !== key) {
-        markActive(key);
-        activeAgent = key;
-        print(`<div class="t-agent-hdr">[ ${d.agent} ]   ${d.time}</div>`);
-      }
-
-      print(`<div class="t-text">${esc(d.text)}</div>`);
-      extractMetrics(d.text);
-    }
-
-    else if (d.type === 'done') {
-      if (activeAgent) markDone(activeAgent);
-      activeAgent = null;
-      showReportDl(); setStatus('done', '✅ Pipeline complete');
-      setBtns(false);
-      print(`<div class="t-separator" style="margin-top:12px">─────────────────────────────────────────────────</div>`);
-      print(`<div class="t-timestamp">[${d.time}]  ✅ Done — full report saved to output/</div>`);
-    }
-
-    else if (d.type === 'retry') {
-      setStatus('running', `⏳ Rate limit — retrying in ${d.wait}s (${d.attempt}/${d.max})…`);
-      print(`<div class="t-separator">─────────────────────────────────────────────────</div>`);
-      print(`<div class="t-error" style="color:#f0883e">${esc(d.message)}</div>`);
-      // Live countdown
-      let remaining = d.wait;
-      const counterId = 'retry-counter-' + Date.now();
-      print(`<div id="${counterId}" class="t-timestamp">  ↻ Retrying in <b>${remaining}s</b>…</div>`);
-      const tick = setInterval(() => {
-        remaining--;
-        const el = document.getElementById(counterId);
-        if (el) el.innerHTML = remaining > 0
-          ? `  ↻ Retrying in <b>${remaining}s</b>…`
-          : `  ↻ Retrying now…`;
-        if (remaining <= 0) clearInterval(tick);
-      }, 1000);
-    }
-
-    else if (d.type === 'error') {
-      setStatus('', '❌ Error');
-      setBtns(false);
-      print(`<div class="t-error" style="white-space:pre-wrap">❌ ${esc(d.message)}</div>`);
-    }
-  }
-
-  // ── Run ─────────────────────────────────────────────────────────────────────
-  function run(mode) {
-    fetch(`/run/${mode}`, {method:'POST'})
-      .then(r => r.json())
-      .then(d => { if (d.error) alert(d.error); })
-      .catch(err => alert('Could not start pipeline: ' + err));
-  }
-
-  // ── Terminal helpers ────────────────────────────────────────────────────────
-  function clearTerminal() {
-    document.getElementById('terminal').innerHTML = '';
-  }
-  function print(html) {
-    const t = document.getElementById('terminal');
-    const d = document.createElement('div');
-    d.innerHTML = html;
-    t.appendChild(d);
-    t.scrollTop = t.scrollHeight;
-  }
-  function esc(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\\n/g,'<br>');
-  }
-
-  // ── Card helpers ────────────────────────────────────────────────────────────
-  function resetCards() {
-    Object.values(AGENTS).forEach(a => {
-      const c = document.getElementById('card-' + a.id);
-      if (c) c.className = 'acard';
-      const s = document.getElementById(a.statusId);
-      if (s) { s.className = 'acard-status'; s.textContent = 'Waiting'; }
-    });
-    ['m-cost','m-co2','m-vms','m-actions'].forEach(id => {
-      document.getElementById(id).textContent = '—';
-    });
-  }
-  function markActive(key) {
-    const a = AGENTS[key]; if (!a) return;
-    const c = document.getElementById('card-' + a.id);
-    if (c) c.className = 'acard active';
-    const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status running'; s.textContent = '⚙ Running…'; }
-  }
-  function markDone(key) {
-    const a = AGENTS[key]; if (!a) return;
-    const c = document.getElementById('card-' + a.id);
-    if (c) c.className = 'acard done';
-    const s = document.getElementById(a.statusId);
-    if (s) { s.className = 'acard-status done'; s.textContent = '✓ Done'; }
-  }
-
-  // ── Status bar ──────────────────────────────────────────────────────────────
-  function setStatus(state, text) {
-    document.getElementById('dot').className = 'dot ' + state;
-    document.getElementById('status-txt').textContent = text;
-  }
-
-  // ── Buttons ─────────────────────────────────────────────────────────────────
-  function setBtns(disabled) {
-    document.getElementById('btn-demo').disabled = disabled;
-    document.getElementById('btn-real').disabled = disabled;
-  }
-
-  // ── Metric extraction ────────────────────────────────────────────────────────
-  function extractMetrics(text) {
-    // Cost
-    const cm = text.match(/TOTAL.*?\\$([\\d,.]+)/i) || text.match(/\\$([\\d,.]+).*?month/i);
-    if (cm) document.getElementById('m-cost').textContent = '$' + cm[1] + '/mo';
-
-    // CO2
-    const co2 = text.match(/([\\d.]+)\\s*kg.*?CO[₂2]/i) || text.match(/CO[₂2].*?([\\d.]+)\\s*kg/i);
-    if (co2) document.getElementById('m-co2').textContent = co2[1] + ' kg';
-
-    // Idle VMs
-    const vm = text.match(/(\\d+)\\s+(?:idle\\s+)?VMs?/i) || text.match(/Running VMs.*?(\\d+)/i);
-    if (vm) document.getElementById('m-vms').textContent = vm[1];
-
-    // LOW risk actions
-    const act = text.match(/LOW\\s+RISK[^\\d]*(\\d+)/i) || text.match(/(\\d+)\\s+LOW\\s+risk/i);
-    if (act) document.getElementById('m-actions').textContent = act[1];
-  }
-
-  connect();
-
-  // ── Cinematic GreenOps Universe Background ──
-  (function(){
-    const c=document.getElementById('bgcanvas');
-    if(!c)return;
-    const ctx=c.getContext('2d');
-    let W,H,t=0;
-    function resize(){W=c.width=c.offsetWidth*devicePixelRatio||600;H=c.height=Math.min(W*0.55,320*devicePixelRatio);c.style.height=(H/devicePixelRatio)+'px';}
-    resize();
-    const stars=Array.from({length:200},()=>({x:Math.random(),y:Math.random()*0.5,r:Math.random()*1.2+0.3,a:Math.random(),tw:Math.random()*6}));
-    const buildings=[
-      {x:0.04,y:0.68,w:0.05,h:0.28,label:'Google',c:'#1a5c3a'},{x:0.11,y:0.64,w:0.046,h:0.32,label:'OpenAI',c:'#1e6b45'},
-      {x:0.18,y:0.70,w:0.042,h:0.26,label:'Meta',c:'#154d30'},{x:0.25,y:0.62,w:0.05,h:0.34,label:'Microsoft',c:'#1a6040'},
-      {x:0.32,y:0.66,w:0.046,h:0.30,label:'Apple',c:'#17543a'},{x:0.39,y:0.61,w:0.052,h:0.35,label:'AWS',c:'#1c6644'},
-      {x:0.46,y:0.67,w:0.048,h:0.29,label:'Tesla',c:'#155030'},{x:0.53,y:0.63,w:0.05,h:0.33,label:'Nvidia',c:'#1b6242'},
-      {x:0.60,y:0.69,w:0.046,h:0.27,label:'IBM',c:'#164e2e'},{x:0.67,y:0.64,w:0.048,h:0.32,label:'DeepMind',c:'#1a5e3c'},
-      {x:0.74,y:0.66,w:0.052,h:0.30,label:'Anthropic',c:'#1e6848'},{x:0.81,y:0.62,w:0.048,h:0.34,label:'Gemini',c:'#17543a'},
-      {x:0.88,y:0.68,w:0.046,h:0.28,label:'GCP',c:'#154e30'},{x:0.94,y:0.64,w:0.05,h:0.32,label:'Oracle',c:'#1b6040'},
-    ];
-    const streams=Array.from({length:10},(_,i)=>({angle:i/10*Math.PI*2,speed:0.004+Math.random()*0.003,r:0.5+Math.random()*0.5}));
-    const particles=Array.from({length:50},()=>({x:Math.random(),y:0.5+Math.random()*0.3,vx:(Math.random()-0.5)*0.0003,vy:-Math.random()*0.0004,a:Math.random(),life:Math.random()}));
-    const clouds=[{x:0.08,y:0.06,w:0.16,h:0.08,speed:0},{x:0.68,y:0.04,w:0.2,h:0.09,speed:0},{x:0.35,y:0.1,w:0.14,h:0.07,speed:0.00012},{x:1.1,y:0.16,w:0.18,h:0.07,speed:0.0001}];
-
-    function drawCloud(cx,cy,cw,ch,alpha){
-      ctx.save();ctx.globalAlpha=alpha;
-      const g=ctx.createRadialGradient(cx+cw/2,cy+ch/2,0,cx+cw/2,cy+ch/2,Math.max(cw,ch)*0.7);
-      g.addColorStop(0,'rgba(180,240,200,0.9)');g.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(cx+cw/2,cy+ch/2,cw/2,ch/2,0,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#00ff88';ctx.lineWidth=1.2;ctx.globalAlpha=alpha*0.8;
-      const mx=cx+cw/2,my=cy+ch/2;
-      ctx.beginPath();ctx.moveTo(mx,my+ch*0.2);ctx.lineTo(mx,my-ch*0.15);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(mx,my);ctx.quadraticCurveTo(mx-cw*0.12,my-ch*0.2,mx-cw*0.08,my-ch*0.3);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(mx,my-ch*0.05);ctx.quadraticCurveTo(mx+cw*0.12,my-ch*0.25,mx+cw*0.07,my-ch*0.35);ctx.stroke();
-      ctx.restore();
-    }
-
-    function frame(){
-      ctx.clearRect(0,0,W,H);
-      // Sky
-      const sk=ctx.createLinearGradient(0,0,0,H*0.55);sk.addColorStop(0,'#000005');sk.addColorStop(1,'#041a0f');
-      ctx.fillStyle=sk;ctx.fillRect(0,0,W,H*0.55);
-      // Stars
-      stars.forEach(s=>{ctx.save();ctx.globalAlpha=s.a*(0.5+0.5*Math.sin(t*s.tw+s.x*10));ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r*(W/600),0,Math.PI*2);ctx.fill();ctx.restore();});
-      // Clouds
-      clouds.forEach((cl,i)=>{if(cl.speed){cl.x-=cl.speed;if(cl.x+cl.w<0)cl.x=1.2;}const pulse=0.08+0.02*Math.sin(t*1.5+i*2);drawCloud(cl.x*W,cl.y*H,cl.w*W,cl.h*H,pulse);});
-      // Horizon glow
-      const hg=ctx.createLinearGradient(0,H*0.48,0,H*0.58);hg.addColorStop(0,'rgba(0,0,0,0)');hg.addColorStop(0.5,'rgba(16,120,70,0.3)');hg.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=hg;ctx.fillRect(0,H*0.48,W,H*0.1);
-      // Ground
-      const gg=ctx.createLinearGradient(0,H*0.55,0,H);gg.addColorStop(0,'#052e16');gg.addColorStop(1,'#021f0e');
-      ctx.fillStyle=gg;ctx.fillRect(0,H*0.55,W,H*0.45);
-      // Roads
-      ctx.strokeStyle='rgba(52,211,153,0.15)';ctx.lineWidth=1.5;
-      [0.75,0.82,0.9].forEach(y=>{ctx.beginPath();ctx.moveTo(0,H*y);ctx.lineTo(W,H*y);ctx.stroke();});
-      // Buildings
-      buildings.forEach(b=>{
-        const bx=b.x*W,by=b.y*H,bw=b.w*W,bh=b.h*H;
-        const bg=ctx.createLinearGradient(bx,by,bx+bw,by);bg.addColorStop(0,b.c);bg.addColorStop(0.5,'#1a7a4a');bg.addColorStop(1,b.c);
-        ctx.fillStyle=bg;ctx.fillRect(bx,by,bw,bh);
-        ctx.fillStyle='rgba(52,211,153,0.2)';
-        const rows=Math.floor(bh/10),cols=Math.floor(bw/8);
-        for(let r=0;r<rows;r++)for(let cl=0;cl<cols;cl++)if(Math.sin(r*cl+t*0.5+b.x*10)>0.2)ctx.fillRect(bx+cl*8+1,by+r*10+1,5,7);
-        const rg=ctx.createRadialGradient(bx+bw/2,by,0,bx+bw/2,by,bw);rg.addColorStop(0,'rgba(52,211,153,0.35)');rg.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.fillStyle=rg;ctx.fillRect(bx-bw,by-bw,bw*3,bw*2);
-        ctx.save();ctx.fillStyle='#34d399';ctx.font=`bold ${Math.max(6,bw*0.3)}px sans-serif`;ctx.textAlign='center';ctx.shadowColor='#00ff88';ctx.shadowBlur=5;ctx.fillText(b.label,bx+bw/2,by-3);ctx.restore();
-        ctx.strokeStyle='rgba(52,211,153,0.6)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(bx+bw/2,by);ctx.lineTo(bx+bw/2,by-H*0.035);ctx.stroke();
-        ctx.fillStyle=`rgba(52,211,153,${0.5+0.5*Math.sin(t*3+b.x*20)})`;ctx.beginPath();ctx.arc(bx+bw/2,by-H*0.035,2,0,Math.PI*2);ctx.fill();
-      });
-      // Particles
-      particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life-=0.003;if(p.life<=0||p.y<0.05){p.x=Math.random();p.y=0.55+Math.random()*0.2;p.life=0.8+Math.random()*0.2;p.vx=(Math.random()-0.5)*0.0003;p.vy=-Math.random()*0.0004;}ctx.save();ctx.globalAlpha=p.a*p.life*0.5;ctx.fillStyle='#34d399';ctx.beginPath();ctx.arc(p.x*W,p.y*H,1.2,0,Math.PI*2);ctx.fill();ctx.restore();});
-      // Globe
-      const gx=W*0.5,gy=H*0.42,gr=Math.min(W,H)*0.09;
-      const gl=ctx.createRadialGradient(gx,gy,gr*0.5,gx,gy,gr*2);gl.addColorStop(0,'rgba(52,211,153,0.12)');gl.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=gl;ctx.beginPath();ctx.arc(gx,gy,gr*2,0,Math.PI*2);ctx.fill();
-      const globeG=ctx.createRadialGradient(gx-gr*0.3,gy-gr*0.3,0,gx,gy,gr);globeG.addColorStop(0,'#1a7a4a');globeG.addColorStop(0.5,'#064e3b');globeG.addColorStop(1,'#011a10');
-      ctx.save();ctx.beginPath();ctx.arc(gx,gy,gr,0,Math.PI*2);ctx.fillStyle=globeG;ctx.fill();ctx.clip();
-      ctx.fillStyle='rgba(52,211,153,0.35)';const rot=t*0.3;
-      ctx.save();ctx.translate(gx,gy);ctx.rotate(rot);
-      [[-.3,-.1,.22,.28,.3],[.15,-.2,.14,.16,.2],[.35,-.05,.28,.22,.1],[.1,.2,.14,.2,0],[.38,.25,.1,.08,.3]].forEach(([ex,ey,ew,eh,ea])=>{ctx.beginPath();ctx.ellipse(gr*ex,gr*ey,gr*ew,gr*eh,ea,0,Math.PI*2);ctx.fill();});
-      ctx.restore();ctx.restore();
-      streams.forEach(s=>{s.angle+=s.speed;const sx=gx+Math.cos(s.angle)*gr*(1.3+s.r*0.3),sy=gy+Math.sin(s.angle)*gr*(0.5+s.r*0.2);ctx.save();ctx.globalAlpha=0.6;ctx.fillStyle='#00ff88';ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fill();ctx.restore();});
-      // Robots
-      [0.08,0.92].forEach((rx,ri)=>{
-        const rsx=rx*W,rsy=H*0.75,bob=Math.sin(t*1.5+ri*Math.PI)*2,sc=Math.min(W,H)*0.001;
-        ctx.save();ctx.translate(rsx,rsy+bob);ctx.scale(ri===0?sc:-sc,sc);
-        ctx.fillStyle='#1a3a2a';ctx.fillRect(-18,40,14,50);ctx.fillRect(4,40,14,50);
-        const bg2=ctx.createLinearGradient(-25,-20,25,-20);bg2.addColorStop(0,'#1a5c3a');bg2.addColorStop(0.5,'#22c55e');bg2.addColorStop(1,'#1a5c3a');
-        ctx.fillStyle=bg2;ctx.fillRect(-25,-20,50,65);ctx.fillStyle='#1a5c3a';ctx.fillRect(-45,-10,20,45);ctx.fillRect(25,-10,20,45);
-        const hg2=ctx.createLinearGradient(-20,-85,20,-85);hg2.addColorStop(0,'#1a5c3a');hg2.addColorStop(0.5,'#16a34a');hg2.addColorStop(1,'#1a5c3a');
-        ctx.fillStyle=hg2;ctx.fillRect(-20,-85,40,40);
-        ctx.fillStyle=`rgba(52,211,153,${0.7+0.3*Math.sin(t*3+ri)})`;ctx.beginPath();ctx.arc(-8,-68,4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(8,-68,4,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle='rgba(52,211,153,0.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-85);ctx.lineTo(0,-105);ctx.stroke();
-        ctx.fillStyle=`rgba(52,211,153,${0.5+0.5*Math.sin(t*4+ri)})`;ctx.beginPath();ctx.arc(0,-107,3,0,Math.PI*2);ctx.fill();
-        ctx.restore();
-      });
-      // Vignette
-      const vig=ctx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.75);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,0.55)');
-      ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
-      t+=0.016;requestAnimationFrame(frame);
-    }
-    frame();
-  })();
-</script>
 <div style="text-align:center;padding:14px;color:#484f58;font-size:0.75rem;border-top:1px solid #21262d;">Built by <strong style="color:#34d399;">Raghu Putta</strong> &nbsp;|&nbsp; <a href="https://github.com/raghu-putta/greenops-agent" target="_blank" style="color:#58a6ff;text-decoration:none;">&#9733; GitHub</a> &nbsp;|&nbsp; <a href="https://greenops-dashboard-845589445410.us-central1.run.app" target="_blank" style="color:#58a6ff;text-decoration:none;">&#127760; Live Demo</a> &nbsp;|&nbsp; <span style="color:#34d399;">v2.0</span> &nbsp;|&nbsp; Powered by <span style="color:#34d399;">Google ADK + Gemini 2.5 Pro</span></div>
 <div id="gcp-panel" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);justify-content:center;align-items:center;"><div style="background:#0d1117;border:1px solid #34d399;border-radius:16px;width:480px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 0 40px rgba(52,211,153,0.2);"><div style="background:linear-gradient(135deg,#0a1628,#0d2818);padding:20px 24px;border-radius:16px 16px 0 0;border-bottom:1px solid #1e3a2a;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;"><h2 style="color:#34d399;margin:0;font-size:1.1rem;">&#9881; Configure GCP</h2><button onclick="closePanel()" style="background:#1a1f2e;border:1px solid #30363d;color:#8b949e;width:32px;height:32px;border-radius:8px;cursor:pointer;">X</button></div><div style="background:#161b22;border-radius:10px;padding:10px;border:1px solid #21262d;text-align:center;"><p style="color:#34d399;font-size:0.7rem;margin:0;text-transform:uppercase;letter-spacing:2px;font-weight:600;">&#9733; Your GreenOps AI Assistant &#9733;</p></div></div><div style="padding:16px 24px 0;"><div style="background:#161b22;border:1px solid #21262d;border-radius:16px 16px 16px 4px;padding:16px;"><div style="display:flex;align-items:flex-start;gap:14px;"><div style="flex-shrink:0;position:relative;width:56px;height:56px;"><div style="position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.4),transparent);animation:eyeGlow 2s ease-in-out infinite;"></div><div style="width:56px;height:56px;border-radius:50%;border:2px solid #34d399;background:#0d1117;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative;z-index:1;">&#129302;</div></div><div style="flex:1;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="color:#34d399;font-size:0.72rem;font-weight:700;letter-spacing:1px;">ALEX</span><span style="background:#34d399;color:#0a1a0f;font-size:0.6rem;padding:1px 6px;border-radius:4px;font-weight:700;">AI</span></div><div id="bot-msg" style="color:#c9d1d9;font-size:0.85rem;line-height:1.6;min-height:48px;"></div><span style="display:inline-block;width:2px;height:14px;background:#34d399;margin-left:2px;animation:blink 0.7s step-end infinite;vertical-align:middle;"></span></div></div></div></div><div style="padding:20px 24px;"><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#10024; Gemini API Key *</label><div style="position:relative;margin-bottom:4px;"><input type="password" id="cfg-api-key" placeholder="AIzaSy..." style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 44px 11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;"/><span onclick="var i=document.getElementById('cfg-api-key');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#6e7681;">&#128065;</span></div><small style="color:#6e7681;font-size:0.72rem;display:block;margin-bottom:14px;">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#58a6ff;">aistudio.google.com/apikey</a></small><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#9729; GCP Project ID *</label><input type="text" id="cfg-project-id" placeholder="my-project-123" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;margin-bottom:4px;"/><small style="color:#6e7681;font-size:0.72rem;display:block;margin-bottom:14px;">Find at <a href="https://console.cloud.google.com" target="_blank" style="color:#58a6ff;">console.cloud.google.com</a></small><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#127758; GCP Region</label><select id="cfg-region" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;cursor:pointer;margin-bottom:14px;"><option value="us-central1">us-central1 - Iowa, USA</option><option value="us-east1">us-east1 - South Carolina, USA</option><option value="us-west1">us-west1 - Oregon, USA</option><option value="europe-west1">europe-west1 - Belgium</option><option value="europe-west2">europe-west2 - London, UK</option><option value="asia-east1">asia-east1 - Taiwan</option><option value="asia-south1">asia-south1 - Mumbai, India</option><option value="australia-southeast1">australia-southeast1 - Sydney</option></select><label style="display:block;color:#34d399;font-size:0.82rem;font-weight:600;margin-bottom:6px;">&#128205; GCP Zone</label><input type="text" id="cfg-zone" placeholder="us-central1-a" style="width:100%;background:#161b22;border:1.5px solid #30363d;color:#e6edf3;padding:11px 14px;border-radius:10px;font-size:0.88rem;box-sizing:border-box;outline:none;margin-bottom:20px;"/><div style="display:flex;gap:10px;margin-bottom:12px;"><button onclick="savePanelCfg()" style="flex:1;background:linear-gradient(135deg,#34d399,#10b981);color:#0a1a0f;border:none;padding:13px;border-radius:10px;font-weight:700;cursor:pointer;">Save and Close</button><button onclick="testPanelConn()" style="flex:1;background:transparent;color:#34d399;border:1.5px solid #34d399;padding:13px;border-radius:10px;font-weight:600;cursor:pointer;">Test Connection</button></div><p style="color:#484f58;font-size:0.72rem;text-align:center;margin:0;">Stored in browser session only.</p></div></div></div>
+
 <script>
 var alexQ=["Welcome! The cloud awaits your command. Let us scan for waste and save the planet!","Hi there! Fill in your GCP details and let us make your infrastructure greener!","Ready to crush some cloud waste? Drop your GCP creds and let us roll!","Precision is my protocol. Enter credentials and I shall optimize with surgical accuracy.","Every idle VM we stop plants a virtual tree. Let us make your cloud carbon-neutral!","Your GCP project is waiting to be optimized. Let us cut costs and carbon together!"];
 var qIdx=0,typeT=null;
 function typeText(txt,el,cb){el.textContent="";var i=0;if(typeT)clearInterval(typeT);typeT=setInterval(function(){if(i<txt.length){el.textContent+=txt[i];i++;}else{clearInterval(typeT);if(cb)setTimeout(cb,3000);}},28);}
 function cycleQ(){var el=document.getElementById("bot-msg");if(!el)return;el.style.opacity="0";setTimeout(function(){qIdx=(qIdx+1)%alexQ.length;el.style.opacity="1";typeText(alexQ[qIdx],el,cycleQ);},400);}
-function openPanel(){document.getElementById("gcp-panel").style.display="flex";loadPanelCfg();setTimeout(function(){var el=document.getElementById("bot-msg");if(el){qIdx=0;typeText(alexQ[0],el,cycleQ);}},300);}
-function closePanel(){document.getElementById("gcp-panel").style.display="none";if(typeT)clearInterval(typeT);}
-function savePanelCfg(){var k=document.getElementById("cfg-api-key").value.trim();var p=document.getElementById("cfg-project-id").value.trim();var r=document.getElementById("cfg-region").value;var z=document.getElementById("cfg-zone").value.trim()||r+"-a";if(!k||!p){var el=document.getElementById("bot-msg");if(typeT)clearInterval(typeT);el.textContent="Oops! API Key and Project ID are required!";return;}sessionStorage.setItem("gops-cfg",JSON.stringify({apiKey:k,projectId:p,region:r,zone:z}));if(typeT)clearInterval(typeT);document.getElementById("bot-msg").textContent="All set! GCP credentials saved!";setTimeout(closePanel,1800);}
+function openPanel(){var p=document.getElementById("gcp-panel");if(p)p.style.display="flex";loadPanelCfg();setTimeout(function(){var el=document.getElementById("bot-msg");if(el){qIdx=0;typeText(alexQ[0],el,cycleQ);}},300);}
+function closePanel(){var p=document.getElementById("gcp-panel");if(p)p.style.display="none";if(typeT)clearInterval(typeT);}
+function savePanelCfg(){var k=document.getElementById("cfg-api-key").value.trim();var p=document.getElementById("cfg-project-id").value.trim();var r=document.getElementById("cfg-region").value;var z=document.getElementById("cfg-zone").value.trim()||r+"-a";var el=document.getElementById("bot-msg");if(!k||!p){if(typeT)clearInterval(typeT);el.textContent="Oops! API Key and Project ID are required!";return;}sessionStorage.setItem("gops-cfg",JSON.stringify({apiKey:k,projectId:p,region:r,zone:z}));if(typeT)clearInterval(typeT);el.textContent="All set! GCP credentials saved!";setTimeout(closePanel,1800);}
 function testPanelConn(){if(typeT)clearInterval(typeT);var el=document.getElementById("bot-msg");el.textContent="Testing connection...";fetch("/test-connection",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({apiKey:document.getElementById("cfg-api-key").value.trim(),projectId:document.getElementById("cfg-project-id").value.trim(),region:document.getElementById("cfg-region").value})}).then(function(r){return r.json();}).then(function(d){el.textContent=d.success?"Connection successful! All systems GO!":"Connection failed. Check your credentials.";}).catch(function(){el.textContent="Could not reach server.";});}
 function loadPanelCfg(){try{var s=JSON.parse(sessionStorage.getItem("gops-cfg")||"{}");if(s.apiKey)document.getElementById("cfg-api-key").value=s.apiKey;if(s.projectId)document.getElementById("cfg-project-id").value=s.projectId;if(s.region)document.getElementById("cfg-region").value=s.region;if(s.zone)document.getElementById("cfg-zone").value=s.zone;}catch(e){}}
-function getTxt(){var t=document.getElementById("terminal");return t?t.innerText||t.textContent:"";}
-function rdlTXT(){var b=new Blob([getTxt()],{type:"text/plain"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".txt";a.click();}
-function rdlPDF(){var w=window.open("","_blank");w.document.write("<!DOCTYPE html><html><head><title>GreenOps Report</title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;line-height:1.7;}h2{color:#34d399;border-bottom:1px solid #34d399;padding-bottom:8px;}</style></head><body><h2>GreenOps AI Report - "+new Date().toLocaleDateString()+"</h2><pre>"+getTxt().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+"</pre><p style=color:#484f58>Built by Raghu Putta | Google ADK + Gemini 2.5 Pro</p></body></html>");w.document.close();setTimeout(function(){w.print();},600);}
-function rdlHTML(){var h="<!DOCTYPE html><html><head><title>GreenOps Report</title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;}h2{color:#34d399;}</style></head><body><h2>GreenOps AI Report</h2><pre>"+getTxt()+"</pre></body></html>";var b=new Blob([h],{type:"text/html"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".html";a.click();}
-function rdlCSV(){var lines=getTxt().split("\n").filter(function(l){return l.trim();});var rows=lines.map(function(l,i){return (i+1)+","+JSON.stringify(l);});var b=new Blob(["No,Content\n"+rows.join("\n")],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".csv";a.click();}
-function rdlJSON(){var d={title:"GreenOps AI Report",generated:new Date().toISOString(),built_by:"Raghu Putta",content:getTxt().split("\n").filter(function(l){return l.trim();})};var b=new Blob([JSON.stringify(d,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_"+new Date().toISOString().split("T")[0]+".json";a.click();}
+function getTxt(){var t=document.getElementById("terminal");return t?(t.innerText||t.textContent):"";}
+function dlBlob(content,mime,ext){var b=new Blob([content],{type:mime});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="GreenOps_Report_"+new Date().toISOString().split("T")[0]+ext;a.click();}
+function rdlTXT(){dlBlob(getTxt(),"text/plain",".txt");}
+function rdlPDF(){var w=window.open("","_blank");var safe=getTxt().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");var h="<!DOCTYPE html><html><head><title>GreenOps Report<\/title><style>body{font-family:monospace;background:#fff;color:#111;padding:40px;white-space:pre-wrap;line-height:1.7;}h2{color:#0a7d52;border-bottom:1px solid #0a7d52;padding-bottom:8px;}<\/style><\/head><body><h2>GreenOps AI Report - "+new Date().toLocaleDateString()+"<\/h2><pre>"+safe+"<\/pre><p>Built by Raghu Putta | Google ADK + Gemini 2.5 Pro<\/p><\/body><\/html>";w.document.write(h);w.document.close();setTimeout(function(){w.print();},600);}
+function rdlHTML(){var h="<!DOCTYPE html><html><head><title>GreenOps Report<\/title><style>body{font-family:monospace;background:#0d1117;color:#c9d1d9;padding:40px;white-space:pre-wrap;}h2{color:#34d399;}<\/style><\/head><body><h2>GreenOps AI Report<\/h2><pre>"+getTxt()+"<\/pre><\/body><\/html>";dlBlob(h,"text/html",".html");}
+function rdlCSV(){var lines=getTxt().split(String.fromCharCode(10)).filter(function(l){return l.trim();});var nl=String.fromCharCode(10);var csv="No,Content"+nl+lines.map(function(l,i){return (i+1)+","+JSON.stringify(l);}).join(nl);dlBlob(csv,"text/csv",".csv");}
+function rdlJSON(){var d={title:"GreenOps AI Report",generated:new Date().toISOString(),built_by:"Raghu Putta",powered_by:"Google ADK + Gemini 2.5 Pro",content:getTxt().split(String.fromCharCode(10)).filter(function(l){return l.trim();})};dlBlob(JSON.stringify(d,null,2),"application/json",".json");}
 function rdlCopy(){navigator.clipboard.writeText(getTxt()).then(function(){var b=document.getElementById("rdl-copy");if(b){b.textContent="Copied!";setTimeout(function(){b.textContent="Copy";},2000);}});}
 function showReportDl(){var b=document.getElementById("report-dl");if(b)b.style.display="flex";}
 window.addEventListener("load",loadPanelCfg);
+
 </script>
 </body>
 </html>"""
