@@ -1,3 +1,4 @@
+from fastapi import Request
 """
 GreenOps AI Web Dashboard
 Real-time 4-agent pipeline visualization with FastAPI + SSE streaming.
